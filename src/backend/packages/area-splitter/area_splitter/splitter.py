@@ -663,7 +663,73 @@ class AreaSplitter:
                         placeholder, _sql_literal(param_value)
                     )
                 splitter_cursor.execute(sql_content)
+        # A file can hold several statements (e.g. a DO block before the final
+        # SELECT). psycopg keeps one result per statement and starts at the
+        # first, so move to the last result, which carries the features.
+        while splitter_cursor.nextset():
+            pass
         return splitter_cursor.fetchall()[0][0]["features"]
+
+    def _split_by_sql_in_transaction(
+        self,
+        conn: Connection,
+        algorithm: SplittingAlgorithm,
+        params: dict,
+        osm_extract: Optional[dict],
+        statement_timeout_ms: Optional[int],
+    ) -> list:
+        """Lock, load inputs and run the SQL algorithm in one transaction."""
+        # Advisory lock acquired BEFORE lock_timeout so queueing isn't
+        # capped by the short lock_timeout window; lock_timeout then
+        # applies to the subsequent DDL.
+        with conn.cursor() as setup_cur:
+            if statement_timeout_ms is None:
+                configure_statement_timeout(setup_cur)
+            else:
+                configure_statement_timeout(setup_cur, statement_timeout_ms)
+            log.debug("Acquiring splitter serialization lock")
+            acquire_splitter_serialization_lock(setup_cur)
+            configure_lock_timeout(setup_cur)
+
+        # Generate db tables if not exist
+        log.debug("Generating required temp tables")
+        create_tables(conn)
+
+        # Add aoi to project_aoi table
+        aoi_to_postgis(conn, self.aoi)
+
+        # Insert data extract into db, using same cursor
+        log.debug("Inserting data extract into db")
+        cur = conn.cursor()
+        self._insert_split_sql_extract(cur, osm_extract)
+
+        # TEMP view - a regular view on temp tables would error.
+        log.debug("Creating db view with intersecting polylines")
+        cur.execute("""
+            DROP VIEW IF EXISTS pg_temp.lines_view;
+
+            CREATE TEMP VIEW lines_view AS
+            SELECT w.tags, w.geom
+            FROM ways_line w
+            CROSS JOIN (SELECT geom FROM project_aoi LIMIT 1) p
+            WHERE ST_Intersects(p.geom, w.geom)
+        """)
+
+        # Make the input parameters accessible to other sql files.
+        cur.execute(
+            f"SET area_splitter.num_buildings = {int(params.get('num_buildings', 0))}"
+        )
+        cur.execute(
+            f"SET area_splitter.num_enumerators = "
+            f"{int(params.get('num_enumerators', 0))}"
+        )
+
+        # Close current cursor
+        cur.close()
+
+        splitter_cursor = conn.cursor()
+        log.debug("Collecting task splitting algorithm")
+        return self._run_split_sql_files(splitter_cursor, algorithm, params)
 
     def splitBySquare(  # noqa: N802
         self,
@@ -718,57 +784,18 @@ class AreaSplitter:
         # Get existing db engine, or create new one
         conn = create_connection(db)
 
-        # Advisory lock acquired BEFORE lock_timeout so queueing isn't
-        # capped by the short lock_timeout window; lock_timeout then
-        # applies to the subsequent DDL.
-        with conn.cursor() as setup_cur:
-            if statement_timeout_ms is None:
-                configure_statement_timeout(setup_cur)
-            else:
-                configure_statement_timeout(setup_cur, statement_timeout_ms)
-            log.debug("Acquiring splitter serialization lock")
-            acquire_splitter_serialization_lock(setup_cur)
-            configure_lock_timeout(setup_cur)
+        try:
+            features = self._split_by_sql_in_transaction(
+                conn, algorithm, params, osm_extract, statement_timeout_ms
+            )
+        except Exception:
+            # Roll back so the transaction-scoped advisory lock is released
+            # now. Otherwise every later split waits on it until timeout.
+            conn.rollback()
+            if not isinstance(db, Connection):
+                conn.close()
+            raise
 
-        # Generate db tables if not exist
-        log.debug("Generating required temp tables")
-        create_tables(conn)
-
-        # Add aoi to project_aoi table
-        aoi_to_postgis(conn, self.aoi)
-
-        # Insert data extract into db, using same cursor
-        log.debug("Inserting data extract into db")
-        cur = conn.cursor()
-        self._insert_split_sql_extract(cur, osm_extract)
-
-        # TEMP view - a regular view on temp tables would error.
-        log.debug("Creating db view with intersecting polylines")
-        cur.execute("""
-            DROP VIEW IF EXISTS pg_temp.lines_view;
-
-            CREATE TEMP VIEW lines_view AS
-            SELECT w.tags, w.geom
-            FROM ways_line w
-            CROSS JOIN (SELECT geom FROM project_aoi LIMIT 1) p
-            WHERE ST_Intersects(p.geom, w.geom)
-        """)
-
-        # Make the input parameters accessible to other sql files.
-        cur.execute(
-            f"SET area_splitter.num_buildings = {int(params.get('num_buildings', 0))}"
-        )
-        cur.execute(
-            f"SET area_splitter.num_enumerators = "
-            f"{int(params.get('num_enumerators', 0))}"
-        )
-
-        # Close current cursor
-        cur.close()
-
-        splitter_cursor = conn.cursor()
-        log.debug("Collecting task splitting algorithm")
-        features = self._run_split_sql_files(splitter_cursor, algorithm, params)
         if features:
             log.info(f"Query returned {len(features)} features")
         else:
@@ -1030,9 +1057,16 @@ be either the data extract used by the XLSForm, or a postgresql database.
         help="Size in meters if using square splitting",
     )
     parser.add_argument(
-        "-number", "--number", nargs="?", const=5, help="Number of buildings in a task"
+        "-number",
+        "--number",
+        nargs="?",
+        const=5,
+        type=int,
+        help="Number of buildings in a task",
     )
-    parser.add_argument("-tasks", "--tasks", nargs="?", const=5, help="Number of tasks")
+    parser.add_argument(
+        "-tasks", "--tasks", nargs="?", const=5, type=int, help="Number of tasks"
+    )
     parser.add_argument("-b", "--boundary", required=True, help="Polygon AOI")
     parser.add_argument("-s", "--source", help="Source data, Geojson or PG:[dbname]")
     parser.add_argument(

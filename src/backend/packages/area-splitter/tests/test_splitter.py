@@ -496,6 +496,35 @@ def test_split_by_sql_roads_with_extract(aoi_json, extract_json):
     assert all("building_count" in feature["properties"] for feature in feature_list)
 
 
+def test_split_by_sql_releases_lock_after_failure(aoi_json, extract_json, monkeypatch):
+    """A failed split rolls back, so the next split is not blocked by its lock."""
+
+    def failing_sql(*_args, **_kwargs):
+        raise RuntimeError("simulated algorithm failure")
+
+    monkeypatch.setattr(AreaSplitter, "_run_split_sql_files", failing_sql)
+
+    # Keeping excinfo keeps the traceback, and so the splitter's connection,
+    # alive (as pytest does for failed tests). A transaction left open on
+    # that connection would still hold the lock.
+    with pytest.raises(RuntimeError, match="simulated algorithm failure") as excinfo:
+        split_by_sql(
+            aoi_json,
+            DB_URL,
+            osm_extract=extract_json,
+            algorithm=SplittingAlgorithm.AVG_BUILDING_SKELETON,
+            algorithm_params={"num_buildings": 10},
+        )
+
+    with psycopg.connect(DB_URL) as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT pg_try_advisory_xact_lock(%s)", (SPLITTER_SERIALIZATION_LOCK_KEY,)
+        )
+        lock_free = cur.fetchone()[0]
+    assert excinfo.value is not None
+    assert lock_free is True
+
+
 def test_split_by_sql_ftm_no_extract(aoi_json):
     """Test Field-TM splitting algorithm, with no data extract."""
     features = split_by_sql(
