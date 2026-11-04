@@ -82,6 +82,7 @@ nav:
       - Visualising Data Externally: https://docs.getodk.org/tutorial-mapping-households
       - ODKCollect Offline Maps: https://docs.getodk.org/collect-offline-maps
       - QField Project By Hand: manuals/qfield-by-hand.md
+      - Mapping With GNSS Interference: manuals/gnss-interference.md
   - Developer Guide:
       - Practices:
           - Dev Practices: https://docs.hotosm.org/dev-practices
