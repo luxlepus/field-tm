@@ -58,6 +58,31 @@ def _load_project_gen_svc_module():
     )
 
 
+def _load_qfield_utils_module():
+    """Load qfield utils.py from the checkout (stdlib-only, no QGIS needed)."""
+    repo_root = _find_repo_root(Path(__file__).resolve())
+    utils_path = _find_existing_file(
+        repo_root,
+        "src/qfield/utils.py",
+        "qfield/utils.py",
+    )
+    spec = spec_from_file_location("qfield_utils_test", utils_path)
+    assert spec is not None and spec.loader is not None
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _utils_stub() -> SimpleNamespace:
+    """Stub for the worker's `utils` module, keeping the real pure helpers."""
+    real_utils = _load_qfield_utils_module()
+    return SimpleNamespace(
+        parse_and_validate_extent=lambda *args, **kwargs: [0, 0, 0, 0],
+        register_plugin_data_dirs=real_utils.register_plugin_data_dirs,
+        set_project_file_permissions=lambda *args, **kwargs: None,
+    )
+
+
 def _load_field_project_module():
     """Load qfield field_project.py from the checkout."""
     repo_root = _find_repo_root(Path(__file__).resolve())
@@ -97,13 +122,7 @@ def _load_field_project_module():
         "sanitize",
         SimpleNamespace(sanitize_generated_qgis_metadata=lambda *args, **kwargs: None),
     )
-    sys_modules.setdefault(
-        "utils",
-        SimpleNamespace(
-            parse_and_validate_extent=lambda *args, **kwargs: [0, 0, 0, 0],
-            set_project_file_permissions=lambda *args, **kwargs: None,
-        ),
-    )
+    sys_modules.setdefault("utils", _utils_stub())
 
     spec.loader.exec_module(module)
     return module
@@ -571,7 +590,7 @@ def test_register_plugin_data_dirs_adds_top_level_subdirs_to_project_entry(tmp_p
     only the .qgz and the ``{basename}.qml`` project plugin survive --
     so QField's plugin loader on the device hits "file doesn't exist".
     """
-    field_project = _load_field_project_module()
+    qfield_utils = _load_qfield_utils_module()
 
     (tmp_path / "project.qgz").write_bytes(b"qgz body")
     (tmp_path / "project.qml").write_bytes(b"plugin body")
@@ -592,8 +611,8 @@ def test_register_plugin_data_dirs_adds_top_level_subdirs_to_project_entry(tmp_p
             written[(scope, key)] = value
             return True
 
-    field_project._register_plugin_data_dirs(
-        FakeProject(), tmp_path, field_project.logging.getLogger(__name__)
+    qfield_utils.register_plugin_data_dirs(
+        FakeProject(), tmp_path, qfield_utils.logging.getLogger(__name__)
     )
 
     assert written.get(("QFieldSync", "dataDirs")) == ["plugins", "styles"]
@@ -603,7 +622,7 @@ def test_register_plugin_data_dirs_merges_existing_and_skips_unchanged_write(
     tmp_path,
 ):
     """Existing dataDirs are preserved; no write happens when nothing new is added."""
-    field_project = _load_field_project_module()
+    qfield_utils = _load_qfield_utils_module()
 
     (tmp_path / "plugins").mkdir()
     (tmp_path / "styles").mkdir()
@@ -621,16 +640,16 @@ def test_register_plugin_data_dirs_merges_existing_and_skips_unchanged_write(
             write_calls.append((scope, key, value))
             return True
 
-    field_project._register_plugin_data_dirs(
-        FakeProject(["DCIM"]), tmp_path, field_project.logging.getLogger(__name__)
+    qfield_utils.register_plugin_data_dirs(
+        FakeProject(["DCIM"]), tmp_path, qfield_utils.logging.getLogger(__name__)
     )
     assert write_calls == [("QFieldSync", "dataDirs", ["DCIM", "plugins", "styles"])]
 
     write_calls.clear()
-    field_project._register_plugin_data_dirs(
+    qfield_utils.register_plugin_data_dirs(
         FakeProject(["plugins", "styles"]),
         tmp_path,
-        field_project.logging.getLogger(__name__),
+        qfield_utils.logging.getLogger(__name__),
     )
     assert write_calls == []
 
@@ -664,6 +683,7 @@ def test_normalize_root_layer_order_in_drone_project_places_vectors_above_raster
             unpack_plugin_zip=lambda *args, **kwargs: None,
         ),
     )
+    sys_modules.setdefault("utils", _utils_stub())
 
     drone_spec.loader.exec_module(drone_module)
 
