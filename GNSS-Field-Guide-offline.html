@@ -1,0 +1,1097 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GNSS Interference Field Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: a single reading column for the guide, widening to a full-width workbench for the submission check. */
+  :root {
+    --paper: #eef2ef;
+    --sheet: #f8faf8;
+    --ink: #142019;
+    --muted: #4c5c53;
+    --rule: #c9d3cc;
+    --accent: #0b6e66;
+    --accent-ink: #ffffff;
+    --accent-soft: #d6ebe7;
+    --high: #b3261e;
+    --high-soft: #f7dcd9;
+    --med: #8a5a00;
+    --med-soft: #f6e7c8;
+    --info: #375a8c;
+    --info-soft: #dde6f3;
+    --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+    --font-body: "IBM Plex Sans", "IBM Plex Sans Arabic", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --step--1: 0.875rem;
+    --step-0: 1rem;
+    --step-1: 1.2rem;
+    --step-2: 1.6rem;
+    --step-3: 2.4rem;
+    --step-4: clamp(2.2rem, 6vw, 4rem);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0f1613; --sheet: #16201b; --ink: #e3ebe6; --muted: #9db0a5; --rule: #2c3a33;
+      --accent: #4fc1b4; --accent-ink: #06201c; --accent-soft: #173a35;
+      --high: #ff8a80; --high-soft: #3d1c1a; --med: #f2c46b; --med-soft: #3a2f16; --info: #9dbcf0; --info-soft: #1c2a40;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0f1613; --sheet: #16201b; --ink: #e3ebe6; --muted: #9db0a5; --rule: #2c3a33;
+    --accent: #4fc1b4; --accent-ink: #06201c; --accent-soft: #173a35;
+    --high: #ff8a80; --high-soft: #3d1c1a; --med: #f2c46b; --med-soft: #3a2f16; --info: #9dbcf0; --info-soft: #1c2a40;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--step-0);
+    line-height: 1.6;
+  }
+  :lang(ar) body, body:lang(ar) { font-family: "IBM Plex Sans Arabic", var(--font-body); }
+  .wrap {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap > * { min-width: 0; }
+  .prose { max-width: 42rem; }
+  h1, h2, h3 { text-wrap: balance; line-height: 1.15; margin: 0; overflow-wrap: break-word; hyphens: auto; }
+  h1 { font-family: var(--font-display); font-weight: 700; font-size: var(--step-4); letter-spacing: 0.005em; }
+  h2 { font-family: var(--font-display); font-weight: 600; font-size: var(--step-3); }
+  h3 { font-size: var(--step-1); font-weight: 600; }
+  p { margin: 0; }
+  a { color: var(--accent); text-underline-offset: 0.18em; }
+  a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, label:focus-within {
+    outline: 3px solid var(--accent); outline-offset: 2px;
+  }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .label {
+    font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+  }
+
+  /* Top bar */
+  .topbar { border-bottom: 1px solid var(--rule); background: var(--sheet); }
+  .topbar .wrap { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding-block: 10px; }
+  .langs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .langs button {
+    font: 500 var(--step--1) var(--font-body); color: var(--ink); background: transparent;
+    border: 1px solid var(--rule); border-radius: 999px; padding: 4px 12px; cursor: pointer;
+  }
+  .langs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+  /* Hero */
+  .hero { padding-block: 48px 32px; display: grid; gap: 20px; }
+  .hero .lede { font-size: var(--step-1); color: var(--muted); max-width: 40rem; }
+  .readout {
+    display: flex; flex-wrap: wrap; gap: 8px 24px; padding: 14px 16px; border: 1px solid var(--rule); border-radius: 6px;
+    background: var(--sheet); font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); max-width: 42rem;
+  }
+  .readout b { color: var(--ink); font-weight: 500; }
+  .readout .bad { color: var(--high); }
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; }
+  .toc a {
+    font-size: var(--step--1); text-decoration: none; color: var(--ink); border: 1px solid var(--rule);
+    padding: 6px 12px; border-radius: 4px; background: var(--sheet);
+  }
+  .toc a:hover { border-color: var(--accent); }
+
+  section.block { padding-block: 40px; border-top: 1px solid var(--rule); display: grid; gap: 20px; }
+  .two { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); }
+  .two > * { min-width: 0; }
+  .panel { background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px; padding: 18px 20px; display: grid; gap: 10px; align-content: start; }
+  .panel h3 { display: flex; align-items: baseline; gap: 10px; }
+  ul.list, ol.list { margin: 0; padding-inline-start: 1.25rem; display: grid; gap: 8px; }
+  ul.list li::marker { color: var(--accent); }
+  .note { border-inline-start: 3px solid var(--med); background: var(--med-soft); padding: 12px 16px; border-radius: 0 6px 6px 0; }
+  [dir="rtl"] .note { border-radius: 6px 0 0 6px; }
+  .note.safety { border-color: var(--high); background: var(--high-soft); }
+  .app-tag { font-family: var(--font-mono); font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--accent-soft); color: var(--ink); white-space: nowrap; }
+
+  /* Checker */
+  .checker { display: grid; gap: 20px; }
+  .controls { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+  .controls > * { min-width: 0; }
+  .field { display: grid; gap: 4px; align-content: start; }
+  [dir="rtl"] .label, [dir="rtl"] th, [dir="rtl"] .badge-example { letter-spacing: 0; text-transform: none; }
+  .field label { font-size: var(--step--1); font-weight: 500; }
+  .field small { color: var(--muted); font-size: 0.8rem; }
+  select, input[type="number"] {
+    font: 400 var(--step-0) var(--font-body); color: var(--ink); background: var(--sheet);
+    border: 1px solid var(--rule); border-radius: 4px; padding: 7px 10px; width: 100%;
+  }
+  input[type="number"] { font-family: var(--font-mono); }
+  .drop {
+    border: 2px dashed var(--rule); border-radius: 8px; padding: 22px; text-align: center; background: var(--sheet);
+    display: grid; gap: 8px; justify-items: center; cursor: pointer;
+  }
+  .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .btn {
+    font: 600 var(--step--1) var(--font-body); border-radius: 4px; padding: 8px 14px; cursor: pointer;
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink);
+  }
+  .btn.ghost { background: transparent; color: var(--accent); }
+  .source { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: var(--step--1); color: var(--muted); }
+  .badge-example { font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 8px; border-radius: 4px; background: var(--med-soft); color: var(--med); }
+  .summary { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); }
+  .stat { border: 1px solid var(--rule); border-radius: 6px; padding: 12px 14px; background: var(--sheet); display: grid; gap: 2px; }
+  .stat .n { font-family: var(--font-display); font-size: var(--step-3); font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat.high .n { color: var(--high); }
+  .stat.med .n { color: var(--med); }
+  .stat.info .n { color: var(--info); }
+  .stat .t { font-size: var(--step--1); color: var(--muted); }
+  .tablebar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+  .tablebar label { display: inline-flex; gap: 8px; align-items: center; font-size: var(--step--1); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--sheet); }
+  table { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+  th, td { padding: 8px 12px; text-align: start; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-family: var(--font-mono); font-weight: 500; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); white-space: nowrap; position: sticky; top: 0; background: var(--sheet); }
+  td.mono { white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .chip.high { background: var(--high-soft); color: var(--high); }
+  .chip.med { background: var(--med-soft); color: var(--med); }
+  .chip.info { background: var(--info-soft); color: var(--info); }
+  .ok { color: var(--muted); }
+  .status { font-size: var(--step--1); color: var(--muted); min-height: 1.4em; }
+  .status.err { color: var(--high); }
+  .legend, #legend { display: grid; gap: 8px; }
+  #legend > div { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: 10px; align-items: start; font-size: var(--step--1); }
+  #legend .chip { white-space: normal; justify-self: start; }
+  footer { border-top: 1px solid var(--rule); padding-block: 32px 48px; color: var(--muted); font-size: var(--step--1); display: grid; gap: 12px; }
+  footer ul { margin: 0; padding-inline-start: 1.2rem; display: grid; gap: 4px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .drop, .btn, .langs button, .toc a { transition: background-color .15s, border-color .15s, color .15s; }
+  }
+</style>
+<style>[hidden]{display:none!important} body{margin:0} img{max-width:100%}</style>
+</head>
+<body>
+
+
+<header class="topbar">
+  <div class="wrap">
+    <span class="label" data-i18n="brand">Field mapping · GNSS interference</span>
+    <nav class="langs" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">English</button>
+      <button type="button" data-lang="de" aria-pressed="false">Deutsch</button>
+      <button type="button" data-lang="es" aria-pressed="false">Español</button>
+      <button type="button" data-lang="fr" aria-pressed="false">Français</button>
+      <button type="button" data-lang="uk" aria-pressed="false">Українська</button>
+      <button type="button" data-lang="ar" aria-pressed="false">العربية</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="hero">
+      <span class="label" data-i18n="eyebrow">Field guide and submission check</span>
+      <h1 data-i18n="h1">Mapping when GPS can't be trusted</h1>
+      <p class="lede" data-i18n="lede">Satellite positioning is jammed or faked in more and more places, especially near conflict zones. This guide helps mappers notice it, keep their data correct and stay safe, and helps project managers find affected submissions.</p>
+      <div class="readout" aria-hidden="true">
+        <span>FIX <b>3D</b></span><span>SATS <b>14/31</b></span><span>ACC <b>±4 m</b></span><span>POS <b class="bad">+212 km</b></span>
+      </div>
+      <p class="label" data-i18n="readoutNote">A spoofed fix can look perfect: good accuracy, many satellites, wrong place.</p>
+      <nav class="toc" aria-label="Contents">
+        <a href="#basics" data-i18n="tocBasics">What is happening</a>
+        <a href="#mappers" data-i18n="tocMappers">For mappers</a>
+        <a href="#safety" data-i18n="tocSafety">Safety and data protection</a>
+        <a href="#managers" data-i18n="tocManagers">For project managers</a>
+        <a href="#check" data-i18n="tocCheck">Check submissions</a>
+      </nav>
+    </div>
+  </div>
+
+  <section class="block" id="basics">
+    <div class="wrap" style="display:grid;gap:20px">
+      <h2 data-i18n="basicsH">What is happening</h2>
+      <div class="two">
+        <div class="panel">
+          <h3 data-i18n="jamH">Jamming</h3>
+          <p data-i18n="jamP">A strong radio signal drowns out the satellites. Your phone loses its position or reports it very inaccurately.</p>
+          <ul class="list" data-i18n-html="jamSigns"></ul>
+        </div>
+        <div class="panel">
+          <h3 data-i18n="spoofH">Spoofing</h3>
+          <p data-i18n="spoofP">Fake satellite signals tell your phone it is somewhere else. The position often looks precise and stable, which makes spoofing harder to notice than jamming.</p>
+          <ul class="list" data-i18n-html="spoofSigns"></ul>
+        </div>
+      </div>
+      <p class="prose" data-i18n="basicsLimit">Ordinary phones cannot reliably prove that a position is genuine. Treat any position that does not match what you see around you as wrong, even when the app shows good accuracy.</p>
+    </div>
+  </section>
+
+  <section class="block" id="mappers">
+    <div class="wrap" style="display:grid;gap:20px">
+      <h2 data-i18n="mappersH">For mappers</h2>
+      <div class="prose panel">
+        <h3 data-i18n="checkH">The 10-second check</h3>
+        <p data-i18n-html="checkP"></p>
+      </div>
+      <div class="two">
+        <div class="panel">
+          <h3><span data-i18n="odkH">If GPS is wrong in ODK Collect</span> <span class="app-tag">ODK</span></h3>
+          <ul class="list" data-i18n-html="odkList"></ul>
+        </div>
+        <div class="panel">
+          <h3><span data-i18n="qfH">If GPS is wrong in QField</span> <span class="app-tag">QField</span></h3>
+          <ul class="list" data-i18n-html="qfList"></ul>
+        </div>
+      </div>
+      <div class="prose panel">
+        <h3 data-i18n="toolsH">Optional tools for a closer look</h3>
+        <ul class="list" data-i18n-html="toolsList"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="safety">
+    <div class="wrap" style="display:grid;gap:20px">
+      <h2 data-i18n="safetyH">Safety and data protection</h2>
+      <div class="note safety prose" data-i18n-html="safetyNote"></div>
+      <ul class="list prose" data-i18n-html="safetyList"></ul>
+    </div>
+  </section>
+
+  <section class="block" id="managers">
+    <div class="wrap" style="display:grid;gap:20px">
+      <h2 data-i18n="managersH">For project managers</h2>
+      <div class="two">
+        <div class="panel"><h3 data-i18n="beforeH">Before fieldwork</h3><ul class="list" data-i18n-html="beforeList"></ul></div>
+        <div class="panel"><h3 data-i18n="duringH">During fieldwork</h3><ul class="list" data-i18n-html="duringList"></ul></div>
+        <div class="panel"><h3 data-i18n="afterH">After fieldwork</h3><ul class="list" data-i18n-html="afterList"></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="check">
+    <div class="wrap checker">
+      <div class="prose" style="display:grid;gap:10px">
+        <h2 data-i18n="checkToolH">Check submissions for suspicious positions</h2>
+        <p data-i18n-html="checkToolP"></p>
+        <p class="note" data-i18n="privacyNote">Your file is read only in this browser tab. Nothing is uploaded or stored.</p>
+      </div>
+
+      <label class="drop" id="drop" for="file">
+        <input type="file" id="file" accept=".csv,text/csv">
+        <strong data-i18n="dropT">Choose an ODK Central CSV export</strong>
+        <span class="label" data-i18n="dropS">or drop it here</span>
+      </label>
+      <div class="source">
+        <span id="sourceName" class="mono"></span>
+        <span id="exampleBadge" class="badge-example" data-i18n="exampleBadge">Example data, invented</span>
+        <button type="button" class="btn ghost" id="loadExample" data-i18n="loadExample">Load example again</button>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+
+      <div class="controls">
+        <div class="field">
+          <label for="geoCol" data-i18n="geoColL">Location field</label>
+          <select id="geoCol"></select>
+          <small data-i18n="geoColS">Field-TM forms: "warmup" is the phone's own position.</small>
+        </div>
+        <div class="field">
+          <label for="userCol" data-i18n="userColL">Mapper column</label>
+          <select id="userCol"></select>
+        </div>
+        <div class="field">
+          <label for="timeCol" data-i18n="timeColL">Time column</label>
+          <select id="timeCol"></select>
+        </div>
+        <div class="field">
+          <label for="farKm" data-i18n="farKmL">Far from the rest (km)</label>
+          <input type="number" id="farKm" min="1" step="1" value="50">
+        </div>
+        <div class="field">
+          <label for="speedKmh" data-i18n="speedL">Impossible speed (km/h)</label>
+          <input type="number" id="speedKmh" min="10" step="10" value="200">
+        </div>
+        <div class="field">
+          <label for="accM" data-i18n="accL">Poor accuracy above (m)</label>
+          <input type="number" id="accM" min="1" step="1" value="50">
+        </div>
+      </div>
+
+      <div class="summary" id="summary"></div>
+
+      <div class="tablebar">
+        <label><input type="checkbox" id="onlyFlagged" checked> <span data-i18n="onlyFlagged">Show flagged submissions only</span></label>
+        <button type="button" class="btn" id="copyCsv" data-i18n="copyCsv">Copy results as CSV</button>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr>
+            <th data-i18n="thRow">Row</th>
+            <th data-i18n="thId">Submission</th>
+            <th data-i18n="thUser">Mapper</th>
+            <th data-i18n="thTime">Time</th>
+            <th data-i18n="thPos">Position</th>
+            <th data-i18n="thAcc">Accuracy</th>
+            <th data-i18n="thFlags">Findings</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <div class="legend prose">
+        <h3 data-i18n="legendH">What the findings mean</h3>
+        <div id="legend"></div>
+        <p class="note" data-i18n="legendNote">Findings are hints for a human review, not proof. Look at each flagged submission before you correct or remove anything.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap" style="display:grid;gap:12px">
+    <p data-i18n="footDraft">Community draft, prepared with AI assistance. Please check it against your organisation's own guidance before relying on it. The Arabic and Spanish texts are machine translations and should be reviewed by a native speaker before wider use.</p>
+    <p class="label" data-i18n="sourcesH">Sources</p>
+    <ul>
+      <li><a href="https://developer.android.com/develop/sensors-and-location/sensors/gnss-spoof-jam" target="_blank" rel="noopener">Android Developers: Detect GNSS jamming and spoofing</a></li>
+      <li><a href="https://navi.ion.org/content/69/3/navi.537" target="_blank" rel="noopener">NAVIGATION journal: Detecting GNSS jamming and spoofing on Android devices</a></li>
+      <li><a href="https://docs.qfield.org/how-to/gnss/" target="_blank" rel="noopener">QField documentation: Positioning (GNSS)</a></li>
+      <li><a href="https://forum.getodk.org/t/faster-geolocation-with-pre-warmed-gps-example-for-odk-build-users/31452" target="_blank" rel="noopener">ODK Forum: start-geopoint ("warmup")</a></li>
+      <li><a href="https://github.com/hotosm/field-tm/issues/3065" target="_blank" rel="noopener">Field-TM issue #3065: GNSS spoofing possible mitigations</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>/* Papa Parse 5.4.1, MIT License, https://www.papaparse.com */
+/* @license
+Papa Parse
+v5.4.1
+https://github.com/mholt/PapaParse
+License: MIT
+*/
+!function(e,t){"function"==typeof define&&define.amd?define([],t):"object"==typeof module&&"undefined"!=typeof exports?module.exports=t():e.Papa=t()}(this,function s(){"use strict";var f="undefined"!=typeof self?self:"undefined"!=typeof window?window:void 0!==f?f:{};var n=!f.document&&!!f.postMessage,o=f.IS_PAPA_WORKER||!1,a={},u=0,b={parse:function(e,t){var r=(t=t||{}).dynamicTyping||!1;J(r)&&(t.dynamicTypingFunction=r,r={});if(t.dynamicTyping=r,t.transform=!!J(t.transform)&&t.transform,t.worker&&b.WORKERS_SUPPORTED){var i=function(){if(!b.WORKERS_SUPPORTED)return!1;var e=(r=f.URL||f.webkitURL||null,i=s.toString(),b.BLOB_URL||(b.BLOB_URL=r.createObjectURL(new Blob(["var global = (function() { if (typeof self !== 'undefined') { return self; } if (typeof window !== 'undefined') { return window; } if (typeof global !== 'undefined') { return global; } return {}; })(); global.IS_PAPA_WORKER=true; ","(",i,")();"],{type:"text/javascript"})))),t=new f.Worker(e);var r,i;return t.onmessage=_,t.id=u++,a[t.id]=t}();return i.userStep=t.step,i.userChunk=t.chunk,i.userComplete=t.complete,i.userError=t.error,t.step=J(t.step),t.chunk=J(t.chunk),t.complete=J(t.complete),t.error=J(t.error),delete t.worker,void i.postMessage({input:e,config:t,workerId:i.id})}var n=null;b.NODE_STREAM_INPUT,"string"==typeof e?(e=function(e){if(65279===e.charCodeAt(0))return e.slice(1);return e}(e),n=t.download?new l(t):new p(t)):!0===e.readable&&J(e.read)&&J(e.on)?n=new g(t):(f.File&&e instanceof File||e instanceof Object)&&(n=new c(t));return n.stream(e)},unparse:function(e,t){var n=!1,_=!0,m=",",y="\r\n",s='"',a=s+s,r=!1,i=null,o=!1;!function(){if("object"!=typeof t)return;"string"!=typeof t.delimiter||b.BAD_DELIMITERS.filter(function(e){return-1!==t.delimiter.indexOf(e)}).length||(m=t.delimiter);("boolean"==typeof t.quotes||"function"==typeof t.quotes||Array.isArray(t.quotes))&&(n=t.quotes);"boolean"!=typeof t.skipEmptyLines&&"string"!=typeof t.skipEmptyLines||(r=t.skipEmptyLines);"string"==typeof t.newline&&(y=t.newline);"string"==typeof t.quoteChar&&(s=t.quoteChar);"boolean"==typeof t.header&&(_=t.header);if(Array.isArray(t.columns)){if(0===t.columns.length)throw new Error("Option columns is empty");i=t.columns}void 0!==t.escapeChar&&(a=t.escapeChar+s);("boolean"==typeof t.escapeFormulae||t.escapeFormulae instanceof RegExp)&&(o=t.escapeFormulae instanceof RegExp?t.escapeFormulae:/^[=+\-@\t\r].*$/)}();var u=new RegExp(Q(s),"g");"string"==typeof e&&(e=JSON.parse(e));if(Array.isArray(e)){if(!e.length||Array.isArray(e[0]))return h(null,e,r);if("object"==typeof e[0])return h(i||Object.keys(e[0]),e,r)}else if("object"==typeof e)return"string"==typeof e.data&&(e.data=JSON.parse(e.data)),Array.isArray(e.data)&&(e.fields||(e.fields=e.meta&&e.meta.fields||i),e.fields||(e.fields=Array.isArray(e.data[0])?e.fields:"object"==typeof e.data[0]?Object.keys(e.data[0]):[]),Array.isArray(e.data[0])||"object"==typeof e.data[0]||(e.data=[e.data])),h(e.fields||[],e.data||[],r);throw new Error("Unable to serialize unrecognized input");function h(e,t,r){var i="";"string"==typeof e&&(e=JSON.parse(e)),"string"==typeof t&&(t=JSON.parse(t));var n=Array.isArray(e)&&0<e.length,s=!Array.isArray(t[0]);if(n&&_){for(var a=0;a<e.length;a++)0<a&&(i+=m),i+=v(e[a],a);0<t.length&&(i+=y)}for(var o=0;o<t.length;o++){var u=n?e.length:t[o].length,h=!1,f=n?0===Object.keys(t[o]).length:0===t[o].length;if(r&&!n&&(h="greedy"===r?""===t[o].join("").trim():1===t[o].length&&0===t[o][0].length),"greedy"===r&&n){for(var d=[],l=0;l<u;l++){var c=s?e[l]:l;d.push(t[o][c])}h=""===d.join("").trim()}if(!h){for(var p=0;p<u;p++){0<p&&!f&&(i+=m);var g=n&&s?e[p]:p;i+=v(t[o][g],p)}o<t.length-1&&(!r||0<u&&!f)&&(i+=y)}}return i}function v(e,t){if(null==e)return"";if(e.constructor===Date)return JSON.stringify(e).slice(1,25);var r=!1;o&&"string"==typeof e&&o.test(e)&&(e="'"+e,r=!0);var i=e.toString().replace(u,a);return(r=r||!0===n||"function"==typeof n&&n(e,t)||Array.isArray(n)&&n[t]||function(e,t){for(var r=0;r<t.length;r++)if(-1<e.indexOf(t[r]))return!0;return!1}(i,b.BAD_DELIMITERS)||-1<i.indexOf(m)||" "===i.charAt(0)||" "===i.charAt(i.length-1))?s+i+s:i}}};if(b.RECORD_SEP=String.fromCharCode(30),b.UNIT_SEP=String.fromCharCode(31),b.BYTE_ORDER_MARK="\ufeff",b.BAD_DELIMITERS=["\r","\n",'"',b.BYTE_ORDER_MARK],b.WORKERS_SUPPORTED=!n&&!!f.Worker,b.NODE_STREAM_INPUT=1,b.LocalChunkSize=10485760,b.RemoteChunkSize=5242880,b.DefaultDelimiter=",",b.Parser=E,b.ParserHandle=r,b.NetworkStreamer=l,b.FileStreamer=c,b.StringStreamer=p,b.ReadableStreamStreamer=g,f.jQuery){var d=f.jQuery;d.fn.parse=function(o){var r=o.config||{},u=[];return this.each(function(e){if(!("INPUT"===d(this).prop("tagName").toUpperCase()&&"file"===d(this).attr("type").toLowerCase()&&f.FileReader)||!this.files||0===this.files.length)return!0;for(var t=0;t<this.files.length;t++)u.push({file:this.files[t],inputElem:this,instanceConfig:d.extend({},r)})}),e(),this;function e(){if(0!==u.length){var e,t,r,i,n=u[0];if(J(o.before)){var s=o.before(n.file,n.inputElem);if("object"==typeof s){if("abort"===s.action)return e="AbortError",t=n.file,r=n.inputElem,i=s.reason,void(J(o.error)&&o.error({name:e},t,r,i));if("skip"===s.action)return void h();"object"==typeof s.config&&(n.instanceConfig=d.extend(n.instanceConfig,s.config))}else if("skip"===s)return void h()}var a=n.instanceConfig.complete;n.instanceConfig.complete=function(e){J(a)&&a(e,n.file,n.inputElem),h()},b.parse(n.file,n.instanceConfig)}else J(o.complete)&&o.complete()}function h(){u.splice(0,1),e()}}}function h(e){this._handle=null,this._finished=!1,this._completed=!1,this._halted=!1,this._input=null,this._baseIndex=0,this._partialLine="",this._rowCount=0,this._start=0,this._nextChunk=null,this.isFirstChunk=!0,this._completeResults={data:[],errors:[],meta:{}},function(e){var t=w(e);t.chunkSize=parseInt(t.chunkSize),e.step||e.chunk||(t.chunkSize=null);this._handle=new r(t),(this._handle.streamer=this)._config=t}.call(this,e),this.parseChunk=function(e,t){if(this.isFirstChunk&&J(this._config.beforeFirstChunk)){var r=this._config.beforeFirstChunk(e);void 0!==r&&(e=r)}this.isFirstChunk=!1,this._halted=!1;var i=this._partialLine+e;this._partialLine="";var n=this._handle.parse(i,this._baseIndex,!this._finished);if(!this._handle.paused()&&!this._handle.aborted()){var s=n.meta.cursor;this._finished||(this._partialLine=i.substring(s-this._baseIndex),this._baseIndex=s),n&&n.data&&(this._rowCount+=n.data.length);var a=this._finished||this._config.preview&&this._rowCount>=this._config.preview;if(o)f.postMessage({results:n,workerId:b.WORKER_ID,finished:a});else if(J(this._config.chunk)&&!t){if(this._config.chunk(n,this._handle),this._handle.paused()||this._handle.aborted())return void(this._halted=!0);n=void 0,this._completeResults=void 0}return this._config.step||this._config.chunk||(this._completeResults.data=this._completeResults.data.concat(n.data),this._completeResults.errors=this._completeResults.errors.concat(n.errors),this._completeResults.meta=n.meta),this._completed||!a||!J(this._config.complete)||n&&n.meta.aborted||(this._config.complete(this._completeResults,this._input),this._completed=!0),a||n&&n.meta.paused||this._nextChunk(),n}this._halted=!0},this._sendError=function(e){J(this._config.error)?this._config.error(e):o&&this._config.error&&f.postMessage({workerId:b.WORKER_ID,error:e,finished:!1})}}function l(e){var i;(e=e||{}).chunkSize||(e.chunkSize=b.RemoteChunkSize),h.call(this,e),this._nextChunk=n?function(){this._readChunk(),this._chunkLoaded()}:function(){this._readChunk()},this.stream=function(e){this._input=e,this._nextChunk()},this._readChunk=function(){if(this._finished)this._chunkLoaded();else{if(i=new XMLHttpRequest,this._config.withCredentials&&(i.withCredentials=this._config.withCredentials),n||(i.onload=v(this._chunkLoaded,this),i.onerror=v(this._chunkError,this)),i.open(this._config.downloadRequestBody?"POST":"GET",this._input,!n),this._config.downloadRequestHeaders){var e=this._config.downloadRequestHeaders;for(var t in e)i.setRequestHeader(t,e[t])}if(this._config.chunkSize){var r=this._start+this._config.chunkSize-1;i.setRequestHeader("Range","bytes="+this._start+"-"+r)}try{i.send(this._config.downloadRequestBody)}catch(e){this._chunkError(e.message)}n&&0===i.status&&this._chunkError()}},this._chunkLoaded=function(){4===i.readyState&&(i.status<200||400<=i.status?this._chunkError():(this._start+=this._config.chunkSize?this._config.chunkSize:i.responseText.length,this._finished=!this._config.chunkSize||this._start>=function(e){var t=e.getResponseHeader("Content-Range");if(null===t)return-1;return parseInt(t.substring(t.lastIndexOf("/")+1))}(i),this.parseChunk(i.responseText)))},this._chunkError=function(e){var t=i.statusText||e;this._sendError(new Error(t))}}function c(e){var i,n;(e=e||{}).chunkSize||(e.chunkSize=b.LocalChunkSize),h.call(this,e);var s="undefined"!=typeof FileReader;this.stream=function(e){this._input=e,n=e.slice||e.webkitSlice||e.mozSlice,s?((i=new FileReader).onload=v(this._chunkLoaded,this),i.onerror=v(this._chunkError,this)):i=new FileReaderSync,this._nextChunk()},this._nextChunk=function(){this._finished||this._config.preview&&!(this._rowCount<this._config.preview)||this._readChunk()},this._readChunk=function(){var e=this._input;if(this._config.chunkSize){var t=Math.min(this._start+this._config.chunkSize,this._input.size);e=n.call(e,this._start,t)}var r=i.readAsText(e,this._config.encoding);s||this._chunkLoaded({target:{result:r}})},this._chunkLoaded=function(e){this._start+=this._config.chunkSize,this._finished=!this._config.chunkSize||this._start>=this._input.size,this.parseChunk(e.target.result)},this._chunkError=function(){this._sendError(i.error)}}function p(e){var r;h.call(this,e=e||{}),this.stream=function(e){return r=e,this._nextChunk()},this._nextChunk=function(){if(!this._finished){var e,t=this._config.chunkSize;return t?(e=r.substring(0,t),r=r.substring(t)):(e=r,r=""),this._finished=!r,this.parseChunk(e)}}}function g(e){h.call(this,e=e||{});var t=[],r=!0,i=!1;this.pause=function(){h.prototype.pause.apply(this,arguments),this._input.pause()},this.resume=function(){h.prototype.resume.apply(this,arguments),this._input.resume()},this.stream=function(e){this._input=e,this._input.on("data",this._streamData),this._input.on("end",this._streamEnd),this._input.on("error",this._streamError)},this._checkIsFinished=function(){i&&1===t.length&&(this._finished=!0)},this._nextChunk=function(){this._checkIsFinished(),t.length?this.parseChunk(t.shift()):r=!0},this._streamData=v(function(e){try{t.push("string"==typeof e?e:e.toString(this._config.encoding)),r&&(r=!1,this._checkIsFinished(),this.parseChunk(t.shift()))}catch(e){this._streamError(e)}},this),this._streamError=v(function(e){this._streamCleanUp(),this._sendError(e)},this),this._streamEnd=v(function(){this._streamCleanUp(),i=!0,this._streamData("")},this),this._streamCleanUp=v(function(){this._input.removeListener("data",this._streamData),this._input.removeListener("end",this._streamEnd),this._input.removeListener("error",this._streamError)},this)}function r(m){var a,o,u,i=Math.pow(2,53),n=-i,s=/^\s*-?(\d+\.?|\.\d+|\d+\.\d+)([eE][-+]?\d+)?\s*$/,h=/^((\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z)))$/,t=this,r=0,f=0,d=!1,e=!1,l=[],c={data:[],errors:[],meta:{}};if(J(m.step)){var p=m.step;m.step=function(e){if(c=e,_())g();else{if(g(),0===c.data.length)return;r+=e.data.length,m.preview&&r>m.preview?o.abort():(c.data=c.data[0],p(c,t))}}}function y(e){return"greedy"===m.skipEmptyLines?""===e.join("").trim():1===e.length&&0===e[0].length}function g(){return c&&u&&(k("Delimiter","UndetectableDelimiter","Unable to auto-detect delimiting character; defaulted to '"+b.DefaultDelimiter+"'"),u=!1),m.skipEmptyLines&&(c.data=c.data.filter(function(e){return!y(e)})),_()&&function(){if(!c)return;function e(e,t){J(m.transformHeader)&&(e=m.transformHeader(e,t)),l.push(e)}if(Array.isArray(c.data[0])){for(var t=0;_()&&t<c.data.length;t++)c.data[t].forEach(e);c.data.splice(0,1)}else c.data.forEach(e)}(),function(){if(!c||!m.header&&!m.dynamicTyping&&!m.transform)return c;function e(e,t){var r,i=m.header?{}:[];for(r=0;r<e.length;r++){var n=r,s=e[r];m.header&&(n=r>=l.length?"__parsed_extra":l[r]),m.transform&&(s=m.transform(s,n)),s=v(n,s),"__parsed_extra"===n?(i[n]=i[n]||[],i[n].push(s)):i[n]=s}return m.header&&(r>l.length?k("FieldMismatch","TooManyFields","Too many fields: expected "+l.length+" fields but parsed "+r,f+t):r<l.length&&k("FieldMismatch","TooFewFields","Too few fields: expected "+l.length+" fields but parsed "+r,f+t)),i}var t=1;!c.data.length||Array.isArray(c.data[0])?(c.data=c.data.map(e),t=c.data.length):c.data=e(c.data,0);m.header&&c.meta&&(c.meta.fields=l);return f+=t,c}()}function _(){return m.header&&0===l.length}function v(e,t){return r=e,m.dynamicTypingFunction&&void 0===m.dynamicTyping[r]&&(m.dynamicTyping[r]=m.dynamicTypingFunction(r)),!0===(m.dynamicTyping[r]||m.dynamicTyping)?"true"===t||"TRUE"===t||"false"!==t&&"FALSE"!==t&&(function(e){if(s.test(e)){var t=parseFloat(e);if(n<t&&t<i)return!0}return!1}(t)?parseFloat(t):h.test(t)?new Date(t):""===t?null:t):t;var r}function k(e,t,r,i){var n={type:e,code:t,message:r};void 0!==i&&(n.row=i),c.errors.push(n)}this.parse=function(e,t,r){var i=m.quoteChar||'"';if(m.newline||(m.newline=function(e,t){e=e.substring(0,1048576);var r=new RegExp(Q(t)+"([^]*?)"+Q(t),"gm"),i=(e=e.replace(r,"")).split("\r"),n=e.split("\n"),s=1<n.length&&n[0].length<i[0].length;if(1===i.length||s)return"\n";for(var a=0,o=0;o<i.length;o++)"\n"===i[o][0]&&a++;return a>=i.length/2?"\r\n":"\r"}(e,i)),u=!1,m.delimiter)J(m.delimiter)&&(m.delimiter=m.delimiter(e),c.meta.delimiter=m.delimiter);else{var n=function(e,t,r,i,n){var s,a,o,u;n=n||[",","\t","|",";",b.RECORD_SEP,b.UNIT_SEP];for(var h=0;h<n.length;h++){var f=n[h],d=0,l=0,c=0;o=void 0;for(var p=new E({comments:i,delimiter:f,newline:t,preview:10}).parse(e),g=0;g<p.data.length;g++)if(r&&y(p.data[g]))c++;else{var _=p.data[g].length;l+=_,void 0!==o?0<_&&(d+=Math.abs(_-o),o=_):o=_}0<p.data.length&&(l/=p.data.length-c),(void 0===a||d<=a)&&(void 0===u||u<l)&&1.99<l&&(a=d,s=f,u=l)}return{successful:!!(m.delimiter=s),bestDelimiter:s}}(e,m.newline,m.skipEmptyLines,m.comments,m.delimitersToGuess);n.successful?m.delimiter=n.bestDelimiter:(u=!0,m.delimiter=b.DefaultDelimiter),c.meta.delimiter=m.delimiter}var s=w(m);return m.preview&&m.header&&s.preview++,a=e,o=new E(s),c=o.parse(a,t,r),g(),d?{meta:{paused:!0}}:c||{meta:{paused:!1}}},this.paused=function(){return d},this.pause=function(){d=!0,o.abort(),a=J(m.chunk)?"":a.substring(o.getCharIndex())},this.resume=function(){t.streamer._halted?(d=!1,t.streamer.parseChunk(a,!0)):setTimeout(t.resume,3)},this.aborted=function(){return e},this.abort=function(){e=!0,o.abort(),c.meta.aborted=!0,J(m.complete)&&m.complete(c),a=""}}function Q(e){return e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}function E(j){var z,M=(j=j||{}).delimiter,P=j.newline,U=j.comments,q=j.step,N=j.preview,B=j.fastMode,K=z=void 0===j.quoteChar||null===j.quoteChar?'"':j.quoteChar;if(void 0!==j.escapeChar&&(K=j.escapeChar),("string"!=typeof M||-1<b.BAD_DELIMITERS.indexOf(M))&&(M=","),U===M)throw new Error("Comment character same as delimiter");!0===U?U="#":("string"!=typeof U||-1<b.BAD_DELIMITERS.indexOf(U))&&(U=!1),"\n"!==P&&"\r"!==P&&"\r\n"!==P&&(P="\n");var W=0,H=!1;this.parse=function(i,t,r){if("string"!=typeof i)throw new Error("Input must be a string");var n=i.length,e=M.length,s=P.length,a=U.length,o=J(q),u=[],h=[],f=[],d=W=0;if(!i)return L();if(j.header&&!t){var l=i.split(P)[0].split(M),c=[],p={},g=!1;for(var _ in l){var m=l[_];J(j.transformHeader)&&(m=j.transformHeader(m,_));var y=m,v=p[m]||0;for(0<v&&(g=!0,y=m+"_"+v),p[m]=v+1;c.includes(y);)y=y+"_"+v;c.push(y)}if(g){var k=i.split(P);k[0]=c.join(M),i=k.join(P)}}if(B||!1!==B&&-1===i.indexOf(z)){for(var b=i.split(P),E=0;E<b.length;E++){if(f=b[E],W+=f.length,E!==b.length-1)W+=P.length;else if(r)return L();if(!U||f.substring(0,a)!==U){if(o){if(u=[],I(f.split(M)),F(),H)return L()}else I(f.split(M));if(N&&N<=E)return u=u.slice(0,N),L(!0)}}return L()}for(var w=i.indexOf(M,W),R=i.indexOf(P,W),C=new RegExp(Q(K)+Q(z),"g"),S=i.indexOf(z,W);;)if(i[W]!==z)if(U&&0===f.length&&i.substring(W,W+a)===U){if(-1===R)return L();W=R+s,R=i.indexOf(P,W),w=i.indexOf(M,W)}else if(-1!==w&&(w<R||-1===R))f.push(i.substring(W,w)),W=w+e,w=i.indexOf(M,W);else{if(-1===R)break;if(f.push(i.substring(W,R)),D(R+s),o&&(F(),H))return L();if(N&&u.length>=N)return L(!0)}else for(S=W,W++;;){if(-1===(S=i.indexOf(z,S+1)))return r||h.push({type:"Quotes",code:"MissingQuotes",message:"Quoted field unterminated",row:u.length,index:W}),T();if(S===n-1)return T(i.substring(W,S).replace(C,z));if(z!==K||i[S+1]!==K){if(z===K||0===S||i[S-1]!==K){-1!==w&&w<S+1&&(w=i.indexOf(M,S+1)),-1!==R&&R<S+1&&(R=i.indexOf(P,S+1));var O=A(-1===R?w:Math.min(w,R));if(i.substr(S+1+O,e)===M){f.push(i.substring(W,S).replace(C,z)),i[W=S+1+O+e]!==z&&(S=i.indexOf(z,W)),w=i.indexOf(M,W),R=i.indexOf(P,W);break}var x=A(R);if(i.substring(S+1+x,S+1+x+s)===P){if(f.push(i.substring(W,S).replace(C,z)),D(S+1+x+s),w=i.indexOf(M,W),S=i.indexOf(z,W),o&&(F(),H))return L();if(N&&u.length>=N)return L(!0);break}h.push({type:"Quotes",code:"InvalidQuotes",message:"Trailing quote on quoted field is malformed",row:u.length,index:W}),S++}}else S++}return T();function I(e){u.push(e),d=W}function A(e){var t=0;if(-1!==e){var r=i.substring(S+1,e);r&&""===r.trim()&&(t=r.length)}return t}function T(e){return r||(void 0===e&&(e=i.substring(W)),f.push(e),W=n,I(f),o&&F()),L()}function D(e){W=e,I(f),f=[],R=i.indexOf(P,W)}function L(e){return{data:u,errors:h,meta:{delimiter:M,linebreak:P,aborted:H,truncated:!!e,cursor:d+(t||0)}}}function F(){q(L()),u=[],h=[]}},this.abort=function(){H=!0},this.getCharIndex=function(){return W}}function _(e){var t=e.data,r=a[t.workerId],i=!1;if(t.error)r.userError(t.error,t.file);else if(t.results&&t.results.data){var n={abort:function(){i=!0,m(t.workerId,{data:[],errors:[],meta:{aborted:!0}})},pause:y,resume:y};if(J(r.userStep)){for(var s=0;s<t.results.data.length&&(r.userStep({data:t.results.data[s],errors:t.results.errors,meta:t.results.meta},n),!i);s++);delete t.results}else J(r.userChunk)&&(r.userChunk(t.results,n,t.file),delete t.results)}t.finished&&!i&&m(t.workerId,t.results)}function m(e,t){var r=a[e];J(r.userComplete)&&r.userComplete(t),r.terminate(),delete a[e]}function y(){throw new Error("Not implemented.")}function w(e){if("object"!=typeof e||null===e)return e;var t=Array.isArray(e)?[]:{};for(var r in e)t[r]=w(e[r]);return t}function v(e,t){return function(){e.apply(t,arguments)}}function J(e){return"function"==typeof e}return o&&(f.onmessage=function(e){var t=e.data;void 0===b.WORKER_ID&&t&&(b.WORKER_ID=t.workerId);if("string"==typeof t.input)f.postMessage({workerId:b.WORKER_ID,results:b.parse(t.input,t.config),finished:!0});else if(f.File&&t.input instanceof File||t.input instanceof Object){var r=b.parse(t.input,t.config);r&&f.postMessage({workerId:b.WORKER_ID,results:r,finished:!0})}}),(l.prototype=Object.create(h.prototype)).constructor=l,(c.prototype=Object.create(h.prototype)).constructor=c,(p.prototype=Object.create(p.prototype)).constructor=p,(g.prototype=Object.create(h.prototype)).constructor=g,b});
+</script>
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Translations ----------
+  const T = {
+    en: {
+      brand: "Field mapping · GNSS interference",
+      eyebrow: "Field guide and submission check",
+      h1: "Mapping when GPS can't be trusted",
+      lede: "Satellite positioning is jammed or faked in more and more places, especially near conflict zones. This guide helps mappers notice it, keep their data correct and stay safe, and helps project managers find affected submissions.",
+      readoutNote: "A spoofed fix can look perfect: good accuracy, many satellites, wrong place.",
+      tocBasics: "What is happening", tocMappers: "For mappers", tocSafety: "Safety and data protection", tocManagers: "For project managers", tocCheck: "Check submissions",
+      basicsH: "What is happening",
+      jamH: "Jamming",
+      jamP: "A strong radio signal drowns out the satellites. Your phone loses its position or reports it very inaccurately.",
+      jamSigns: "<li>No position, or it takes minutes to get one.</li><li>The accuracy circle grows to hundreds of metres.</li><li>Satellites are listed but not used for the fix.</li>",
+      spoofH: "Spoofing",
+      spoofP: "Fake satellite signals tell your phone it is somewhere else. The position often looks precise and stable, which makes spoofing harder to notice than jamming.",
+      spoofSigns: "<li>Your position jumps far away, sometimes to another town or an airport.</li><li>The dot stays still while you walk, or moves in a direction you are not going.</li><li>Several phones in your team show the same wrong spot.</li>",
+      basicsLimit: "Ordinary phones cannot reliably prove that a position is genuine. Treat any position that does not match what you see around you as wrong, even when the app shows good accuracy.",
+      mappersH: "For mappers",
+      checkH: "The 10-second check",
+      checkP: "Before you start and every time something feels off, compare the blue dot with the map. Find something you can see right now on the satellite image: a road junction, a building corner, a field edge. <strong>If the dot is not where you are standing, do not use GPS for this session.</strong> Select or place features by what you see on the imagery instead.",
+      odkH: "If GPS is wrong in ODK Collect",
+      odkList: "<li>For existing features, pick the feature on the map by matching it with the imagery, not by its distance to the blue dot.</li><li>For new features, place the point manually on the map. Do not use \"current location\".</li><li>Prepare offline basemaps before you go, so imagery is available without signal.</li><li>If your form has a notes field, write \"GPS unreliable, placed manually\".</li>",
+      qfH: "If GPS is wrong in QField",
+      qfList: "<li>Turn off \"lock to position\" and digitise by tapping on the imagery.</li><li>In Settings › Positioning, enable the accuracy requirement so QField refuses to collect while accuracy is bad. This helps against jamming, not against spoofing.</li><li>Position averaging reduces noise. It does not fix a spoofed position.</li><li>An external multi-band receiver is more robust, but it is not immune either.</li>",
+      toolsH: "Optional tools for a closer look",
+      toolsList: "<li><strong>GPSTest</strong> (open source, Android) shows which satellites your phone sees and their signal strength.</li><li><strong>GnssLogger</strong> by Google has a Spoof/Jam view. Signal strength and gain dropping together point to jamming. Signal strength rising while gain drops points to spoofing.</li><li>Neither tool can prove a position is genuine. Use them to confirm a suspicion, not to dismiss one.</li>",
+      safetyH: "Safety and data protection",
+      safetyNote: "<strong>GNSS interference often happens near military activity, borders and sensitive sites.</strong> Your safety comes before any data. Follow your organisation's security rules and stop mapping if the situation feels unsafe.",
+      safetyList: "<li>Never use mock-location apps or your own transmitters to \"fix\" the position.</li><li>Your phone records your own location with each submission. In Field-TM ODK forms this is the \"warmup\" field, together with device ID and username. In conflict areas this is sensitive personal data.</li><li>Managers: limit who can download raw exports, and remove location, device and username columns before sharing data.</li><li>Do not publish where and when individual mappers were working.</li>",
+      managersH: "For project managers",
+      beforeH: "Before fieldwork",
+      beforeList: "<li>Ask local partners whether interference has been reported in the area.</li><li>Provide offline imagery (basemaps) so mappers can work without GPS.</li><li>Brief the team on the 10-second check and on manual placement.</li><li>In QField projects, agree on accuracy settings with the team.</li>",
+      duringH: "During fieldwork",
+      duringList: "<li>Ask mappers to report when the dot is wrong, with time and rough place.</li><li>Several reports from one area on one day usually mean interference, not user error.</li><li>Do not push mappers to keep moving around to \"find signal\".</li>",
+      afterH: "After fieldwork",
+      afterList: "<li>Run the check below on your ODK Central export.</li><li>Review flagged submissions with the mapper where possible.</li><li>Features selected from the map are usually still correct even when the phone's own position was wrong. Points captured from GPS need a closer look.</li>",
+      checkToolH: "Check submissions for suspicious positions",
+      checkToolP: "Download your submissions from ODK Central as CSV (Submissions › Download › CSV) and open the file here. The check looks at the phone's recorded position and flags patterns that are typical for jamming and spoofing. It starts with an invented example so you can see how it works.",
+      privacyNote: "Your file is read only in this browser tab. Nothing is uploaded or stored.",
+      dropT: "Choose an ODK Central CSV export", dropS: "or drop it here",
+      exampleBadge: "Example data, invented", loadExample: "Load example again",
+      geoColL: "Location field", geoColS: "Field-TM forms: \"warmup\" is the phone's own position.",
+      userColL: "Mapper column", timeColL: "Time column", noneOpt: "(none)",
+      farKmL: "Far from the rest (km)", speedL: "Impossible speed (km/h)", accL: "Poor accuracy above (m)",
+      onlyFlagged: "Show flagged submissions only", copyCsv: "Copy results as CSV", copied: "Copied {n} rows to the clipboard.", copyFail: "Copying is blocked here. Select the table and copy it instead.",
+      thRow: "Row", thId: "Submission", thUser: "Mapper", thTime: "Time", thPos: "Position", thAcc: "Accuracy", thFlags: "Findings",
+      statTotal: "submissions checked", statHigh: "need review", statMed: "worth a look", statInfo: "without position",
+      noFlags: "no findings",
+      loaded: "{n} submissions loaded from {file}.",
+      errNoGeo: "No location columns found. ODK Central CSV exports name them like \"warmup-Latitude\" and \"warmup-Longitude\".",
+      errParse: "The file could not be read as CSV: {msg}",
+      errEmpty: "The file has no rows.",
+      legendH: "What the findings mean",
+      legendNote: "Findings are hints for a human review, not proof. Look at each flagged submission before you correct or remove anything.",
+      f_shared: "Same position as {n} others", f_shared_d: "Several submissions with exactly the same coordinates, often from different phones. Real GPS readings almost never repeat to the metre. Typical for spoofing, or for a position the phone cached.",
+      f_far: "{km} km from the rest", f_far_d: "Far away from where most submissions were recorded. Either the phone was spoofed, or the form was filled in somewhere else.",
+      f_speed: "Jump of {km} km at {kmh} km/h", f_speed_d: "The same mapper's previous submission was too far away for the time between them.",
+      f_acc0: "Accuracy exactly 0 m", f_acc0_d: "Real receivers always report some error. Zero often comes from a simulated or injected position.",
+      f_poor: "Poor accuracy ({m} m)", f_poor_d: "Typical for jamming or for a very short time to get a fix.",
+      f_nofix: "No position recorded", f_nofix_d: "The phone did not get a position at all. Several of these together can mean jamming.",
+      footDraft: "Community draft, prepared with AI assistance. Please check it against your organisation's own guidance before relying on it. The Spanish, French, Ukrainian and Arabic texts are machine translations and should be reviewed by native speakers before wider use.",
+      sourcesH: "Sources"
+    },
+    de: {
+      brand: "Feldkartierung · GNSS-Störungen",
+      eyebrow: "Feldanleitung und Prüfwerkzeug",
+      h1: "Kartieren, wenn man GPS nicht trauen kann",
+      lede: "Satellitenortung wird an immer mehr Orten gestört oder gefälscht, besonders in der Nähe von Konfliktgebieten. Diese Anleitung hilft Kartierenden, das zu bemerken, korrekte Daten zu erfassen und sicher zu bleiben. Projektleitungen hilft sie, betroffene Einreichungen zu finden.",
+      readoutNote: "Eine gefälschte Position kann perfekt aussehen: gute Genauigkeit, viele Satelliten, falscher Ort.",
+      tocBasics: "Was passiert", tocMappers: "Für Kartierende", tocSafety: "Sicherheit und Datenschutz", tocManagers: "Für Projektleitungen", tocCheck: "Einreichungen prüfen",
+      basicsH: "Was passiert",
+      jamH: "Jamming (Störung)",
+      jamP: "Ein starkes Funksignal überdeckt die Satelliten. Das Telefon verliert seine Position oder meldet sie sehr ungenau.",
+      jamSigns: "<li>Keine Position, oder es dauert Minuten, bis eine da ist.</li><li>Der Genauigkeitskreis wächst auf Hunderte Meter.</li><li>Satelliten werden angezeigt, aber nicht für die Position genutzt.</li>",
+      spoofH: "Spoofing (Fälschung)",
+      spoofP: "Gefälschte Satellitensignale gaukeln dem Telefon einen anderen Ort vor. Die Position wirkt oft genau und stabil. Darum fällt Spoofing schwerer auf als Jamming.",
+      spoofSigns: "<li>Die Position springt weit weg, manchmal in eine andere Stadt oder zu einem Flughafen.</li><li>Der Punkt bleibt stehen, während man geht, oder bewegt sich in eine falsche Richtung.</li><li>Mehrere Telefone im Team zeigen denselben falschen Ort.</li>",
+      basicsLimit: "Normale Telefone können nicht zuverlässig beweisen, dass eine Position echt ist. Behandle jede Position als falsch, die nicht zu dem passt, was du um dich herum siehst, auch wenn die App gute Genauigkeit anzeigt.",
+      mappersH: "Für Kartierende",
+      checkH: "Der 10-Sekunden-Check",
+      checkP: "Vor dem Start und immer, wenn sich etwas seltsam anfühlt: Vergleiche den blauen Punkt mit der Karte. Such dir etwas, das du gerade siehst, auf dem Satellitenbild: eine Kreuzung, eine Hausecke, einen Feldrand. <strong>Wenn der Punkt nicht dort ist, wo du stehst, nutze für diese Sitzung kein GPS.</strong> Wähle oder setze Objekte stattdessen anhand des Luftbilds.",
+      odkH: "Wenn GPS in ODK Collect falsch ist",
+      odkList: "<li>Bei bestehenden Objekten: Wähle das Objekt auf der Karte durch Abgleich mit dem Luftbild, nicht nach seiner Nähe zum blauen Punkt.</li><li>Bei neuen Objekten: Setze den Punkt von Hand auf der Karte. Nutze nicht „aktueller Standort“.</li><li>Lade Offline-Karten vor dem Losgehen, damit das Luftbild auch ohne Netz verfügbar ist.</li><li>Wenn das Formular ein Notizfeld hat, schreib „GPS unzuverlässig, von Hand gesetzt“.</li>",
+      qfH: "Wenn GPS in QField falsch ist",
+      qfList: "<li>Schalte „an Position koppeln“ aus und digitalisiere durch Tippen auf das Luftbild.</li><li>Aktiviere unter Einstellungen › Ortung die Genauigkeitsanforderung, damit QField bei schlechter Genauigkeit nicht erfasst. Das hilft gegen Jamming, nicht gegen Spoofing.</li><li>Positionsmittelung verringert Rauschen. Eine gefälschte Position korrigiert sie nicht.</li><li>Ein externer Mehrfrequenz-Empfänger ist robuster, aber auch nicht immun.</li>",
+      toolsH: "Optionale Werkzeuge für einen genaueren Blick",
+      toolsList: "<li><strong>GPSTest</strong> (Open Source, Android) zeigt, welche Satelliten das Telefon sieht und wie stark ihr Signal ist.</li><li><strong>GnssLogger</strong> von Google hat eine Spoof/Jam-Ansicht. Sinken Signalstärke und Verstärkung gemeinsam, deutet das auf Jamming. Steigt die Signalstärke, während die Verstärkung sinkt, deutet das auf Spoofing.</li><li>Keines der Werkzeuge kann beweisen, dass eine Position echt ist. Nutze sie, um einen Verdacht zu bestätigen, nicht um ihn abzutun.</li>",
+      safetyH: "Sicherheit und Datenschutz",
+      safetyNote: "<strong>GNSS-Störungen treten oft in der Nähe militärischer Aktivität, von Grenzen und sensiblen Orten auf.</strong> Deine Sicherheit geht jeder Datenerhebung vor. Halte dich an die Sicherheitsregeln deiner Organisation und hör auf, wenn sich die Lage unsicher anfühlt.",
+      safetyList: "<li>Nutze nie Apps für simulierte Standorte oder eigene Sender, um die Position zu „reparieren“.</li><li>Das Telefon speichert bei jeder Einreichung deinen eigenen Standort. In Field-TM-ODK-Formularen ist das das Feld „warmup“, zusammen mit Geräte-ID und Benutzername. In Konfliktgebieten sind das sensible personenbezogene Daten.</li><li>Projektleitungen: Beschränkt, wer Rohdaten herunterladen darf, und entfernt Standort-, Geräte- und Benutzerspalten, bevor ihr Daten weitergebt.</li><li>Veröffentlicht nicht, wo und wann einzelne Kartierende unterwegs waren.</li>",
+      managersH: "Für Projektleitungen",
+      beforeH: "Vor dem Einsatz",
+      beforeList: "<li>Fragt lokale Partner, ob in der Gegend Störungen bekannt sind.</li><li>Stellt Offline-Luftbilder (Basiskarten) bereit, damit ohne GPS gearbeitet werden kann.</li><li>Weist das Team in den 10-Sekunden-Check und das manuelle Setzen ein.</li><li>Legt in QField-Projekten die Genauigkeitseinstellungen gemeinsam fest.</li>",
+      duringH: "Während des Einsatzes",
+      duringList: "<li>Bittet Kartierende, falsche Positionen mit Uhrzeit und ungefährem Ort zu melden.</li><li>Mehrere Meldungen aus einer Gegend am selben Tag bedeuten meist eine Störung, keinen Bedienfehler.</li><li>Drängt niemanden, ständig umherzulaufen, um „Empfang zu finden“.</li>",
+      afterH: "Nach dem Einsatz",
+      afterList: "<li>Lasst die Prüfung unten über euren ODK-Central-Export laufen.</li><li>Besprecht markierte Einreichungen nach Möglichkeit mit den Kartierenden.</li><li>Auf der Karte ausgewählte Objekte stimmen meist trotzdem, auch wenn die Position des Telefons falsch war. Per GPS erfasste Punkte brauchen einen genaueren Blick.</li>",
+      checkToolH: "Einreichungen auf verdächtige Positionen prüfen",
+      checkToolP: "Lade deine Einreichungen aus ODK Central als CSV herunter (Submissions › Download › CSV) und öffne die Datei hier. Die Prüfung schaut auf die vom Telefon gespeicherte Position und markiert Muster, die typisch für Jamming und Spoofing sind. Zum Ausprobieren ist ein erfundenes Beispiel geladen.",
+      privacyNote: "Deine Datei wird nur in diesem Browser-Tab gelesen. Nichts wird hochgeladen oder gespeichert.",
+      dropT: "ODK-Central-CSV-Export auswählen", dropS: "oder hierher ziehen",
+      exampleBadge: "Beispieldaten, erfunden", loadExample: "Beispiel erneut laden",
+      geoColL: "Standortfeld", geoColS: "Field-TM-Formulare: „warmup“ ist die Position des Telefons.",
+      userColL: "Spalte Kartierende", timeColL: "Spalte Zeit", noneOpt: "(keine)",
+      farKmL: "Weit weg vom Rest (km)", speedL: "Unmögliche Geschwindigkeit (km/h)", accL: "Schlechte Genauigkeit ab (m)",
+      onlyFlagged: "Nur markierte Einreichungen zeigen", copyCsv: "Ergebnisse als CSV kopieren", copied: "{n} Zeilen in die Zwischenablage kopiert.", copyFail: "Kopieren ist hier blockiert. Markiere die Tabelle und kopiere sie selbst.",
+      thRow: "Zeile", thId: "Einreichung", thUser: "Kartierende", thTime: "Zeit", thPos: "Position", thAcc: "Genauigkeit", thFlags: "Befunde",
+      statTotal: "Einreichungen geprüft", statHigh: "sollten geprüft werden", statMed: "einen Blick wert", statInfo: "ohne Position",
+      noFlags: "keine Befunde",
+      loaded: "{n} Einreichungen aus {file} geladen.",
+      errNoGeo: "Keine Standortspalten gefunden. ODK-Central-CSV-Exporte benennen sie etwa „warmup-Latitude“ und „warmup-Longitude“.",
+      errParse: "Die Datei konnte nicht als CSV gelesen werden: {msg}",
+      errEmpty: "Die Datei enthält keine Zeilen.",
+      legendH: "Was die Befunde bedeuten",
+      legendNote: "Befunde sind Hinweise für eine Prüfung durch Menschen, kein Beweis. Schau dir jede markierte Einreichung an, bevor du etwas korrigierst oder löschst.",
+      f_shared: "Gleiche Position wie {n} andere", f_shared_d: "Mehrere Einreichungen mit exakt denselben Koordinaten, oft von verschiedenen Telefonen. Echte GPS-Messungen wiederholen sich fast nie auf den Meter genau. Typisch für Spoofing oder eine vom Telefon zwischengespeicherte Position.",
+      f_far: "{km} km vom Rest entfernt", f_far_d: "Weit weg von dem Ort, an dem die meisten Einreichungen erfasst wurden. Entweder war das Telefon gefälscht, oder das Formular wurde woanders ausgefüllt.",
+      f_speed: "Sprung von {km} km mit {kmh} km/h", f_speed_d: "Die vorherige Einreichung derselben Person war für die vergangene Zeit zu weit entfernt.",
+      f_acc0: "Genauigkeit genau 0 m", f_acc0_d: "Echte Empfänger melden immer einen Fehler. Null stammt oft von einer simulierten oder eingespeisten Position.",
+      f_poor: "Schlechte Genauigkeit ({m} m)", f_poor_d: "Typisch für Jamming oder für eine sehr kurze Zeit bis zur Positionsbestimmung.",
+      f_nofix: "Keine Position gespeichert", f_nofix_d: "Das Telefon hat gar keine Position bekommen. Mehrere davon zusammen können auf Jamming hindeuten.",
+      footDraft: "Entwurf aus der Community, erstellt mit KI-Unterstützung. Bitte mit den Richtlinien der eigenen Organisation abgleichen, bevor ihr euch darauf verlasst. Die spanischen, französischen, ukrainischen und arabischen Texte sind maschinell übersetzt und sollten vor breiterer Nutzung von Muttersprachlern geprüft werden.",
+      sourcesH: "Quellen"
+    },
+    es: {
+      brand: "Mapeo de campo · Interferencias GNSS",
+      eyebrow: "Guía de campo y revisión de envíos",
+      h1: "Mapear cuando no se puede confiar en el GPS",
+      lede: "El posicionamiento por satélite se bloquea o se falsifica en cada vez más lugares, sobre todo cerca de zonas de conflicto. Esta guía ayuda a quienes mapean a detectarlo, mantener sus datos correctos y estar a salvo, y ayuda a quienes gestionan proyectos a encontrar los envíos afectados.",
+      readoutNote: "Una posición falsificada puede parecer perfecta: buena precisión, muchos satélites, lugar equivocado.",
+      tocBasics: "Qué está pasando", tocMappers: "Para quienes mapean", tocSafety: "Seguridad y protección de datos", tocManagers: "Para gestores de proyecto", tocCheck: "Revisar envíos",
+      basicsH: "Qué está pasando",
+      jamH: "Bloqueo (jamming)",
+      jamP: "Una señal de radio fuerte tapa a los satélites. El teléfono pierde su posición o la indica con muy poca precisión.",
+      jamSigns: "<li>No hay posición, o tarda minutos en aparecer.</li><li>El círculo de precisión crece a cientos de metros.</li><li>Se ven satélites, pero no se usan para la posición.</li>",
+      spoofH: "Suplantación (spoofing)",
+      spoofP: "Señales de satélite falsas hacen creer al teléfono que está en otro lugar. La posición suele parecer precisa y estable, por eso la suplantación se nota menos que el bloqueo.",
+      spoofSigns: "<li>La posición salta lejos, a veces a otra ciudad o a un aeropuerto.</li><li>El punto no se mueve mientras caminas, o se mueve en otra dirección.</li><li>Varios teléfonos del equipo muestran el mismo lugar equivocado.</li>",
+      basicsLimit: "Un teléfono normal no puede demostrar con seguridad que una posición es real. Trata como incorrecta cualquier posición que no coincida con lo que ves a tu alrededor, aunque la aplicación indique buena precisión.",
+      mappersH: "Para quienes mapean",
+      checkH: "La comprobación de 10 segundos",
+      checkP: "Antes de empezar, y cada vez que algo parezca raro, compara el punto azul con el mapa. Busca en la imagen de satélite algo que estés viendo ahora: un cruce, la esquina de un edificio, el borde de un campo. <strong>Si el punto no está donde estás tú, no uses el GPS en esta sesión.</strong> Selecciona o coloca los elementos según lo que ves en la imagen.",
+      odkH: "Si el GPS falla en ODK Collect",
+      odkList: "<li>Para elementos existentes, elige el elemento en el mapa comparándolo con la imagen, no por su distancia al punto azul.</li><li>Para elementos nuevos, coloca el punto a mano en el mapa. No uses \"ubicación actual\".</li><li>Prepara mapas base sin conexión antes de salir, para tener imágenes sin señal.</li><li>Si el formulario tiene un campo de notas, escribe \"GPS no fiable, colocado a mano\".</li>",
+      qfH: "Si el GPS falla en QField",
+      qfList: "<li>Desactiva \"bloquear en la posición\" y digitaliza tocando sobre la imagen.</li><li>En Ajustes › Posicionamiento, activa el requisito de precisión para que QField no capture con mala precisión. Ayuda contra el bloqueo, no contra la suplantación.</li><li>Promediar posiciones reduce el ruido. No corrige una posición falsificada.</li><li>Un receptor externo multibanda es más robusto, pero tampoco es inmune.</li>",
+      toolsH: "Herramientas opcionales para mirar más de cerca",
+      toolsList: "<li><strong>GPSTest</strong> (código abierto, Android) muestra qué satélites ve el teléfono y la fuerza de su señal.</li><li><strong>GnssLogger</strong> de Google tiene una vista Spoof/Jam. Si la fuerza de la señal y la ganancia bajan juntas, apunta a bloqueo. Si la señal sube mientras la ganancia baja, apunta a suplantación.</li><li>Ninguna herramienta puede demostrar que una posición es real. Úsalas para confirmar una sospecha, no para descartarla.</li>",
+      safetyH: "Seguridad y protección de datos",
+      safetyNote: "<strong>Las interferencias GNSS suelen darse cerca de actividad militar, fronteras y lugares sensibles.</strong> Tu seguridad va antes que cualquier dato. Sigue las normas de seguridad de tu organización y deja de mapear si la situación no parece segura.",
+      safetyList: "<li>Nunca uses aplicaciones de ubicación simulada ni transmisores propios para \"arreglar\" la posición.</li><li>El teléfono guarda tu propia ubicación con cada envío. En los formularios ODK de Field-TM es el campo \"warmup\", junto con el ID del dispositivo y el usuario. En zonas de conflicto son datos personales sensibles.</li><li>Gestores: limitad quién puede descargar los datos brutos y quitad las columnas de ubicación, dispositivo y usuario antes de compartir datos.</li><li>No publiquéis dónde y cuándo trabajó cada persona.</li>",
+      managersH: "Para gestores de proyecto",
+      beforeH: "Antes del trabajo de campo",
+      beforeList: "<li>Preguntad a socios locales si se han notado interferencias en la zona.</li><li>Facilitad imágenes sin conexión (mapas base) para poder trabajar sin GPS.</li><li>Explicad al equipo la comprobación de 10 segundos y la colocación manual.</li><li>En proyectos QField, acordad los ajustes de precisión con el equipo.</li>",
+      duringH: "Durante el trabajo de campo",
+      duringList: "<li>Pedid que se avise cuando el punto esté mal, con hora y lugar aproximado.</li><li>Varios avisos de una zona el mismo día suelen indicar interferencia, no un error de uso.</li><li>No presionéis para que la gente se mueva sin parar \"buscando señal\".</li>",
+      afterH: "Después del trabajo de campo",
+      afterList: "<li>Pasad la revisión de abajo sobre vuestra exportación de ODK Central.</li><li>Revisad los envíos marcados con quien los hizo, si es posible.</li><li>Los elementos elegidos en el mapa suelen ser correctos aunque la posición del teléfono fallara. Los puntos tomados por GPS necesitan más atención.</li>",
+      checkToolH: "Revisar envíos con posiciones sospechosas",
+      checkToolP: "Descarga tus envíos de ODK Central como CSV (Submissions › Download › CSV) y abre el archivo aquí. La revisión mira la posición que guardó el teléfono y marca patrones típicos de bloqueo y suplantación. Se abre con un ejemplo inventado para que veas cómo funciona.",
+      privacyNote: "Tu archivo solo se lee en esta pestaña del navegador. No se sube ni se guarda nada.",
+      dropT: "Elige una exportación CSV de ODK Central", dropS: "o suéltala aquí",
+      exampleBadge: "Datos de ejemplo, inventados", loadExample: "Cargar el ejemplo de nuevo",
+      geoColL: "Campo de ubicación", geoColS: "Formularios de Field-TM: \"warmup\" es la posición del propio teléfono.",
+      userColL: "Columna de persona", timeColL: "Columna de hora", noneOpt: "(ninguna)",
+      farKmL: "Lejos del resto (km)", speedL: "Velocidad imposible (km/h)", accL: "Mala precisión a partir de (m)",
+      onlyFlagged: "Mostrar solo envíos marcados", copyCsv: "Copiar resultados como CSV", copied: "{n} filas copiadas al portapapeles.", copyFail: "Aquí no se puede copiar. Selecciona la tabla y cópiala tú.",
+      thRow: "Fila", thId: "Envío", thUser: "Persona", thTime: "Hora", thPos: "Posición", thAcc: "Precisión", thFlags: "Hallazgos",
+      statTotal: "envíos revisados", statHigh: "requieren revisión", statMed: "conviene mirar", statInfo: "sin posición",
+      noFlags: "sin hallazgos",
+      loaded: "{n} envíos cargados de {file}.",
+      errNoGeo: "No se encontraron columnas de ubicación. Las exportaciones CSV de ODK Central las llaman, por ejemplo, \"warmup-Latitude\" y \"warmup-Longitude\".",
+      errParse: "No se pudo leer el archivo como CSV: {msg}",
+      errEmpty: "El archivo no tiene filas.",
+      legendH: "Qué significan los hallazgos",
+      legendNote: "Los hallazgos son pistas para una revisión humana, no pruebas. Mira cada envío marcado antes de corregir o borrar algo.",
+      f_shared: "Misma posición que {n} más", f_shared_d: "Varios envíos con exactamente las mismas coordenadas, a menudo de teléfonos distintos. Las lecturas reales de GPS casi nunca se repiten al metro. Típico de suplantación o de una posición guardada en caché.",
+      f_far: "A {km} km del resto", f_far_d: "Muy lejos de donde se registró la mayoría de los envíos. O el teléfono fue engañado, o el formulario se rellenó en otro lugar.",
+      f_speed: "Salto de {km} km a {kmh} km/h", f_speed_d: "El envío anterior de la misma persona estaba demasiado lejos para el tiempo transcurrido.",
+      f_acc0: "Precisión de exactamente 0 m", f_acc0_d: "Los receptores reales siempre indican algún error. Cero suele venir de una posición simulada o inyectada.",
+      f_poor: "Mala precisión ({m} m)", f_poor_d: "Típico de bloqueo o de muy poco tiempo para obtener la posición.",
+      f_nofix: "Sin posición registrada", f_nofix_d: "El teléfono no obtuvo ninguna posición. Varios casos juntos pueden indicar bloqueo.",
+      footDraft: "Borrador comunitario, preparado con ayuda de IA. Compáralo con las directrices de tu organización antes de confiar en él. Los textos en español, francés, ucraniano y árabe son traducciones automáticas y deberían ser revisados por hablantes nativos antes de un uso más amplio.",
+      sourcesH: "Fuentes"
+    },
+    fr: {
+      brand: "Cartographie de terrain · Interférences GNSS",
+      eyebrow: "Guide de terrain et vérification des envois",
+      h1: "Cartographier quand on ne peut pas se fier au GPS",
+      lede: "Le positionnement par satellite est brouillé ou falsifié dans de plus en plus d'endroits, surtout près des zones de conflit. Ce guide aide les cartographes à le repérer, à garder des données justes et à rester en sécurité, et aide les responsables de projet à trouver les envois concernés.",
+      readoutNote: "Une position falsifiée peut sembler parfaite : bonne précision, beaucoup de satellites, mauvais endroit.",
+      tocBasics: "Ce qui se passe", tocMappers: "Pour les cartographes", tocSafety: "Sécurité et protection des données", tocManagers: "Pour les responsables de projet", tocCheck: "Vérifier les envois",
+      basicsH: "Ce qui se passe",
+      jamH: "Brouillage (jamming)",
+      jamP: "Un signal radio puissant couvre les satellites. Le téléphone perd sa position ou l'indique de façon très imprécise.",
+      jamSigns: "<li>Pas de position, ou il faut plusieurs minutes pour en obtenir une.</li><li>Le cercle de précision grandit jusqu'à des centaines de mètres.</li><li>Des satellites sont affichés mais ne servent pas au calcul de la position.</li>",
+      spoofH: "Leurrage (spoofing)",
+      spoofP: "De faux signaux satellite font croire au téléphone qu'il est ailleurs. La position paraît souvent précise et stable, ce qui rend le leurrage plus difficile à repérer que le brouillage.",
+      spoofSigns: "<li>La position saute loin, parfois dans une autre ville ou sur un aéroport.</li><li>Le point reste immobile pendant que vous marchez, ou part dans une autre direction.</li><li>Plusieurs téléphones de l'équipe affichent le même mauvais endroit.</li>",
+      basicsLimit: "Un téléphone ordinaire ne peut pas prouver de façon fiable qu'une position est authentique. Considérez comme fausse toute position qui ne correspond pas à ce que vous voyez autour de vous, même si l'application affiche une bonne précision.",
+      mappersH: "Pour les cartographes",
+      checkH: "La vérification en 10 secondes",
+      checkP: "Avant de commencer, et chaque fois que quelque chose semble anormal, comparez le point bleu avec la carte. Cherchez sur l'image satellite quelque chose que vous voyez en ce moment : un carrefour, l'angle d'un bâtiment, la bordure d'un champ. <strong>Si le point n'est pas là où vous vous tenez, n'utilisez pas le GPS pendant cette session.</strong> Sélectionnez ou placez les objets d'après ce que vous voyez sur l'image.",
+      odkH: "Si le GPS est faux dans ODK Collect",
+      odkList: "<li>Pour les objets existants, choisissez l'objet sur la carte en le comparant à l'image, pas selon sa distance au point bleu.</li><li>Pour les nouveaux objets, placez le point à la main sur la carte. N'utilisez pas « position actuelle ».</li><li>Préparez des fonds de carte hors ligne avant de partir, pour avoir les images sans réseau.</li><li>Si le formulaire a un champ de notes, écrivez « GPS peu fiable, placé à la main ».</li>",
+      qfH: "Si le GPS est faux dans QField",
+      qfList: "<li>Désactivez « verrouiller sur la position » et numérisez en touchant l'image.</li><li>Dans Paramètres › Positionnement, activez l'exigence de précision pour que QField refuse de saisir quand la précision est mauvaise. Cela aide contre le brouillage, pas contre le leurrage.</li><li>La moyenne des positions réduit le bruit. Elle ne corrige pas une position falsifiée.</li><li>Un récepteur externe multifréquence est plus robuste, mais pas invulnérable.</li>",
+      toolsH: "Outils facultatifs pour regarder de plus près",
+      toolsList: "<li><strong>GPSTest</strong> (open source, Android) montre quels satellites le téléphone voit et la force de leur signal.</li><li><strong>GnssLogger</strong> de Google a une vue Spoof/Jam. Si la force du signal et le gain baissent ensemble, cela indique un brouillage. Si le signal monte pendant que le gain baisse, cela indique un leurrage.</li><li>Aucun de ces outils ne peut prouver qu'une position est authentique. Utilisez-les pour confirmer un soupçon, pas pour l'écarter.</li>",
+      safetyH: "Sécurité et protection des données",
+      safetyNote: "<strong>Les interférences GNSS se produisent souvent près d'activités militaires, de frontières et de sites sensibles.</strong> Votre sécurité passe avant toute donnée. Suivez les règles de sécurité de votre organisation et arrêtez si la situation ne semble pas sûre.",
+      safetyList: "<li>N'utilisez jamais d'applications de fausse localisation ni vos propres émetteurs pour « réparer » la position.</li><li>Le téléphone enregistre votre propre position avec chaque envoi. Dans les formulaires ODK de Field-TM, c'est le champ « warmup », avec l'identifiant de l'appareil et le nom d'utilisateur. En zone de conflit, ce sont des données personnelles sensibles.</li><li>Responsables : limitez qui peut télécharger les exports bruts, et supprimez les colonnes de position, d'appareil et d'utilisateur avant de partager des données.</li><li>Ne publiez pas où et quand chaque cartographe a travaillé.</li>",
+      managersH: "Pour les responsables de projet",
+      beforeH: "Avant le terrain",
+      beforeList: "<li>Demandez aux partenaires locaux si des interférences ont été signalées dans la zone.</li><li>Fournissez des images hors ligne (fonds de carte) pour pouvoir travailler sans GPS.</li><li>Expliquez à l'équipe la vérification en 10 secondes et le placement manuel.</li><li>Pour les projets QField, convenez des réglages de précision avec l'équipe.</li>",
+      duringH: "Pendant le terrain",
+      duringList: "<li>Demandez aux cartographes de signaler quand le point est faux, avec l'heure et le lieu approximatif.</li><li>Plusieurs signalements dans une même zone le même jour indiquent en général une interférence, pas une erreur d'utilisation.</li><li>Ne poussez personne à se déplacer sans cesse pour « trouver du signal ».</li>",
+      afterH: "Après le terrain",
+      afterList: "<li>Lancez la vérification ci-dessous sur votre export ODK Central.</li><li>Revoyez les envois signalés avec la personne concernée si possible.</li><li>Les objets choisis sur la carte restent en général justes même si la position du téléphone était fausse. Les points saisis par GPS demandent plus d'attention.</li>",
+      checkToolH: "Vérifier les envois pour des positions suspectes",
+      checkToolP: "Téléchargez vos envois depuis ODK Central au format CSV (Submissions › Download › CSV) et ouvrez le fichier ici. La vérification examine la position enregistrée par le téléphone et signale les schémas typiques du brouillage et du leurrage. Un exemple inventé est chargé pour montrer le fonctionnement.",
+      privacyNote: "Votre fichier est lu uniquement dans cet onglet du navigateur. Rien n'est envoyé ni enregistré.",
+      dropT: "Choisir un export CSV d'ODK Central", dropS: "ou le déposer ici",
+      exampleBadge: "Données d'exemple, inventées", loadExample: "Recharger l'exemple",
+      geoColL: "Champ de position", geoColS: "Formulaires Field-TM : « warmup » est la position du téléphone lui-même.",
+      userColL: "Colonne cartographe", timeColL: "Colonne heure", noneOpt: "(aucune)",
+      farKmL: "Loin des autres (km)", speedL: "Vitesse impossible (km/h)", accL: "Mauvaise précision au-delà de (m)",
+      onlyFlagged: "Afficher uniquement les envois signalés", copyCsv: "Copier les résultats en CSV", copied: "{n} lignes copiées dans le presse-papiers.", copyFail: "La copie est bloquée ici. Sélectionnez le tableau et copiez-le vous-même.",
+      thRow: "Ligne", thId: "Envoi", thUser: "Cartographe", thTime: "Heure", thPos: "Position", thAcc: "Précision", thFlags: "Constats",
+      statTotal: "envois vérifiés", statHigh: "à revoir", statMed: "à regarder", statInfo: "sans position",
+      noFlags: "aucun constat",
+      loaded: "{n} envois chargés depuis {file}.",
+      errNoGeo: "Aucune colonne de position trouvée. Les exports CSV d'ODK Central les nomment par exemple « warmup-Latitude » et « warmup-Longitude ».",
+      errParse: "Le fichier n'a pas pu être lu comme CSV : {msg}",
+      errEmpty: "Le fichier ne contient aucune ligne.",
+      legendH: "Ce que signifient les constats",
+      legendNote: "Les constats sont des indices pour une vérification humaine, pas des preuves. Examinez chaque envoi signalé avant de corriger ou supprimer quoi que ce soit.",
+      f_shared: "Même position que {n} autres", f_shared_d: "Plusieurs envois avec exactement les mêmes coordonnées, souvent depuis des téléphones différents. De vraies mesures GPS ne se répètent presque jamais au mètre près. Typique du leurrage ou d'une position mise en cache.",
+      f_far: "À {km} km des autres", f_far_d: "Très loin de l'endroit où la plupart des envois ont été enregistrés. Soit le téléphone a été leurré, soit le formulaire a été rempli ailleurs.",
+      f_speed: "Saut de {km} km à {kmh} km/h", f_speed_d: "L'envoi précédent de la même personne était trop loin pour le temps écoulé.",
+      f_acc0: "Précision d'exactement 0 m", f_acc0_d: "Les vrais récepteurs indiquent toujours une marge d'erreur. Zéro vient souvent d'une position simulée ou injectée.",
+      f_poor: "Mauvaise précision ({m} m)", f_poor_d: "Typique du brouillage ou d'un temps très court pour obtenir une position.",
+      f_nofix: "Aucune position enregistrée", f_nofix_d: "Le téléphone n'a obtenu aucune position. Plusieurs cas ensemble peuvent indiquer un brouillage.",
+      footDraft: "Brouillon communautaire, préparé avec l'aide d'une IA. Comparez-le avec les consignes de votre organisation avant de vous y fier. Les textes en espagnol, français, ukrainien et arabe sont des traductions automatiques et devraient être relus par des locuteurs natifs avant une diffusion plus large.",
+      sourcesH: "Sources"
+    },
+    uk: {
+      brand: "Польове картографування · Перешкоди GNSS",
+      eyebrow: "Польовий посібник і перевірка надсилань",
+      h1: "Картографування, коли GPS не можна довіряти",
+      lede: "Супутникове позиціонування глушать або підмінюють у дедалі більшій кількості місць, особливо поблизу зон конфлікту. Цей посібник допомагає картографам помітити це, зберегти правильність даних і власну безпеку, а керівникам проєктів — знайти уражені надсилання.",
+      readoutNote: "Підмінена позиція може виглядати ідеально: добра точність, багато супутників, неправильне місце.",
+      tocBasics: "Що відбувається", tocMappers: "Для картографів", tocSafety: "Безпека та захист даних", tocManagers: "Для керівників проєктів", tocCheck: "Перевірити надсилання",
+      basicsH: "Що відбувається",
+      jamH: "Глушіння (jamming)",
+      jamP: "Потужний радіосигнал заглушує супутники. Телефон втрачає позицію або показує її дуже неточно.",
+      jamSigns: "<li>Позиції немає, або її визначення триває кілька хвилин.</li><li>Коло точності зростає до сотень метрів.</li><li>Супутники видно, але вони не використовуються для визначення позиції.</li>",
+      spoofH: "Підміна (spoofing)",
+      spoofP: "Фальшиві супутникові сигнали змушують телефон «думати», що він деінде. Позиція часто виглядає точною і стабільною, тому підміну помітити важче, ніж глушіння.",
+      spoofSigns: "<li>Позиція стрибає далеко, іноді в інше місто чи в аеропорт.</li><li>Точка стоїть на місці, коли ви йдете, або рухається не в тому напрямку.</li><li>Кілька телефонів у команді показують те саме неправильне місце.</li>",
+      basicsLimit: "Звичайний телефон не може надійно довести, що позиція справжня. Вважайте хибною будь-яку позицію, яка не збігається з тим, що ви бачите навколо, навіть якщо застосунок показує добру точність.",
+      mappersH: "Для картографів",
+      checkH: "Перевірка за 10 секунд",
+      checkP: "Перед початком роботи і щоразу, коли щось здається дивним, порівняйте синю точку з картою. Знайдіть на супутниковому знімку те, що бачите зараз: перехрестя, ріг будівлі, край поля. <strong>Якщо точка не там, де ви стоїте, не використовуйте GPS у цьому сеансі.</strong> Вибирайте або ставте об'єкти за тим, що бачите на знімку.",
+      odkH: "Якщо GPS хибний в ODK Collect",
+      odkList: "<li>Для наявних об'єктів вибирайте об'єкт на карті, звіряючи його зі знімком, а не за відстанню до синьої точки.</li><li>Для нових об'єктів ставте точку на карті вручну. Не використовуйте «поточне місцезнаходження».</li><li>Підготуйте офлайн-підкладки перед виходом, щоб знімки були доступні без зв'язку.</li><li>Якщо у формі є поле приміток, напишіть «GPS ненадійний, поставлено вручну».</li>",
+      qfH: "Якщо GPS хибний у QField",
+      qfList: "<li>Вимкніть «прив'язку до позиції» і оцифровуйте, торкаючись знімка.</li><li>У Налаштування › Позиціонування увімкніть вимогу точності, щоб QField не дозволяв збирати дані при поганій точності. Це допомагає проти глушіння, але не проти підміни.</li><li>Усереднення позицій зменшує шум, але не виправляє підмінену позицію.</li><li>Зовнішній багатодіапазонний приймач стійкіший, але теж не захищений повністю.</li>",
+      toolsH: "Додаткові інструменти для детальнішої перевірки",
+      toolsList: "<li><strong>GPSTest</strong> (відкритий код, Android) показує, які супутники бачить телефон і яка сила їхнього сигналу.</li><li><strong>GnssLogger</strong> від Google має вкладку Spoof/Jam. Якщо сила сигналу і підсилення падають разом, це вказує на глушіння. Якщо сигнал зростає, а підсилення падає, це вказує на підміну.</li><li>Жоден із цих інструментів не може довести, що позиція справжня. Використовуйте їх, щоб підтвердити підозру, а не щоб її відкинути.</li>",
+      safetyH: "Безпека та захист даних",
+      safetyNote: "<strong>Перешкоди GNSS часто виникають поблизу військової активності, кордонів і чутливих об'єктів.</strong> Ваша безпека важливіша за будь-які дані. Дотримуйтеся правил безпеки вашої організації і припиніть роботу, якщо ситуація здається небезпечною.",
+      safetyList: "<li>Ніколи не використовуйте застосунки фіктивного місцезнаходження чи власні передавачі, щоб «виправити» позицію.</li><li>Телефон записує ваше власне місцезнаходження з кожним надсиланням. У формах ODK для Field-TM це поле «warmup», разом з ідентифікатором пристрою та іменем користувача. У зонах конфлікту це чутливі персональні дані.</li><li>Керівникам: обмежте коло тих, хто може завантажувати сирі дані, і видаляйте стовпці з місцезнаходженням, пристроєм та іменем користувача перед тим, як ділитися даними.</li><li>Не публікуйте, де і коли працював кожен картограф.</li>",
+      managersH: "Для керівників проєктів",
+      beforeH: "Перед польовою роботою",
+      beforeList: "<li>Запитайте місцевих партнерів, чи повідомлялося про перешкоди в цьому районі.</li><li>Надайте офлайн-знімки (підкладки), щоб можна було працювати без GPS.</li><li>Поясніть команді перевірку за 10 секунд і ручне розміщення.</li><li>У проєктах QField узгодьте з командою налаштування точності.</li>",
+      duringH: "Під час польової роботи",
+      duringList: "<li>Попросіть картографів повідомляти, коли точка хибна, із зазначенням часу і приблизного місця.</li><li>Кілька повідомлень з одного району за один день зазвичай означають перешкоди, а не помилку користувача.</li><li>Не змушуйте людей постійно переміщатися, щоб «знайти сигнал».</li>",
+      afterH: "Після польової роботи",
+      afterList: "<li>Запустіть перевірку нижче для вашого експорту з ODK Central.</li><li>Переглядайте позначені надсилання разом з картографом, якщо можливо.</li><li>Об'єкти, вибрані на карті, зазвичай правильні, навіть якщо позиція телефону була хибною. Точки, зібрані за GPS, потребують уважнішої перевірки.</li>",
+      checkToolH: "Перевірити надсилання на підозрілі позиції",
+      checkToolP: "Завантажте надсилання з ODK Central у форматі CSV (Submissions › Download › CSV) і відкрийте файл тут. Перевірка аналізує позицію, записану телефоном, і позначає закономірності, типові для глушіння та підміни. Для ознайомлення завантажено вигаданий приклад.",
+      privacyNote: "Ваш файл читається лише в цій вкладці браузера. Нічого не завантажується на сервер і не зберігається.",
+      dropT: "Виберіть CSV-експорт з ODK Central", dropS: "або перетягніть його сюди",
+      exampleBadge: "Приклад, вигадані дані", loadExample: "Завантажити приклад знову",
+      geoColL: "Поле позиції", geoColS: "Форми Field-TM: «warmup» — це позиція самого телефона.",
+      userColL: "Стовпець картографа", timeColL: "Стовпець часу", noneOpt: "(немає)",
+      farKmL: "Далеко від решти (км)", speedL: "Неможлива швидкість (км/год)", accL: "Погана точність понад (м)",
+      onlyFlagged: "Показувати лише позначені надсилання", copyCsv: "Копіювати результати як CSV", copied: "Скопійовано рядків: {n}.", copyFail: "Копіювання тут заблоковано. Виділіть таблицю і скопіюйте її вручну.",
+      thRow: "Рядок", thId: "Надсилання", thUser: "Картограф", thTime: "Час", thPos: "Позиція", thAcc: "Точність", thFlags: "Знахідки",
+      statTotal: "надсилань перевірено", statHigh: "потребують перевірки", statMed: "варто глянути", statInfo: "без позиції",
+      noFlags: "без знахідок",
+      loaded: "Завантажено надсилань: {n} з {file}.",
+      errNoGeo: "Стовпці позиції не знайдено. У CSV-експортах ODK Central вони називаються, наприклад, «warmup-Latitude» і «warmup-Longitude».",
+      errParse: "Не вдалося прочитати файл як CSV: {msg}",
+      errEmpty: "У файлі немає рядків.",
+      legendH: "Що означають знахідки",
+      legendNote: "Знахідки — це підказки для перевірки людиною, а не докази. Перегляньте кожне позначене надсилання, перш ніж щось виправляти чи видаляти.",
+      f_shared: "Та сама позиція, що й у {n} інших", f_shared_d: "Кілька надсилань з абсолютно однаковими координатами, часто з різних телефонів. Справжні вимірювання GPS майже ніколи не повторюються з точністю до метра. Типово для підміни або для позиції, збереженої в кеші телефона.",
+      f_far: "{km} км від решти", f_far_d: "Дуже далеко від місця, де записано більшість надсилань. Або телефон зазнав підміни, або форму заповнили деінде.",
+      f_speed: "Стрибок на {km} км зі швидкістю {kmh} км/год", f_speed_d: "Попереднє надсилання тієї самої людини було надто далеко для часу, що минув.",
+      f_acc0: "Точність рівно 0 м", f_acc0_d: "Справжні приймачі завжди вказують певну похибку. Нуль часто походить від імітованої або підставленої позиції.",
+      f_poor: "Погана точність ({m} м)", f_poor_d: "Типово для глушіння або для дуже короткого часу визначення позиції.",
+      f_nofix: "Позицію не записано", f_nofix_d: "Телефон узагалі не отримав позиції. Кілька таких випадків разом можуть означати глушіння.",
+      footDraft: "Спільнотна чернетка, підготовлена за допомогою ШІ. Перш ніж покладатися на неї, звірте її з настановами вашої організації. Тексти іспанською, французькою, українською та арабською мовами перекладено машинно; перед ширшим використанням їх мають перевірити носії мови.",
+      sourcesH: "Джерела"
+    },
+    ar: {
+      brand: "رسم الخرائط الميداني · تشويش GNSS",
+      eyebrow: "دليل ميداني وفحص للإرسالات",
+      h1: "رسم الخرائط حين لا يمكن الوثوق بـ GPS",
+      lede: "يتعرّض تحديد المواقع عبر الأقمار الصناعية للتشويش أو التزييف في أماكن متزايدة، خصوصاً قرب مناطق النزاع. يساعد هذا الدليل راسمي الخرائط على ملاحظة ذلك والحفاظ على صحة بياناتهم وسلامتهم، ويساعد مديري المشاريع على العثور على الإرسالات المتأثرة.",
+      readoutNote: "قد يبدو الموقع المزيّف مثالياً: دقة جيدة، أقمار كثيرة، مكان خاطئ.",
+      tocBasics: "ما الذي يحدث", tocMappers: "لراسمي الخرائط", tocSafety: "السلامة وحماية البيانات", tocManagers: "لمديري المشاريع", tocCheck: "فحص الإرسالات",
+      basicsH: "ما الذي يحدث",
+      jamH: "التشويش (Jamming)",
+      jamP: "إشارة لاسلكية قوية تغطي على الأقمار الصناعية. يفقد الهاتف موقعه أو يعرضه بدقة ضعيفة جداً.",
+      jamSigns: "<li>لا يوجد موقع، أو يستغرق الحصول عليه دقائق.</li><li>تتسع دائرة الدقة إلى مئات الأمتار.</li><li>تظهر الأقمار الصناعية لكنها لا تُستخدم لتحديد الموقع.</li>",
+      spoofH: "التزييف (Spoofing)",
+      spoofP: "إشارات أقمار صناعية مزيفة توهم الهاتف بأنه في مكان آخر. غالباً ما يبدو الموقع دقيقاً وثابتاً، ولذلك يصعب ملاحظة التزييف أكثر من التشويش.",
+      spoofSigns: "<li>يقفز موقعك بعيداً، أحياناً إلى مدينة أخرى أو إلى مطار.</li><li>تبقى النقطة ثابتة وأنت تمشي، أو تتحرك في اتجاه لا تسير فيه.</li><li>تُظهر عدة هواتف في فريقك المكان الخاطئ نفسه.</li>",
+      basicsLimit: "لا تستطيع الهواتف العادية أن تثبت بشكل موثوق أن الموقع حقيقي. اعتبر أي موقع لا يطابق ما تراه حولك موقعاً خاطئاً، حتى لو أظهر التطبيق دقة جيدة.",
+      mappersH: "لراسمي الخرائط",
+      checkH: "فحص العشر ثوانٍ",
+      checkP: "قبل أن تبدأ، وكلما شعرت بأن شيئاً غير طبيعي، قارن النقطة الزرقاء بالخريطة. ابحث في صورة القمر الصناعي عن شيء تراه الآن: تقاطع طرق، أو زاوية مبنى، أو حافة حقل. <strong>إذا لم تكن النقطة حيث تقف، فلا تستخدم GPS في هذه الجلسة.</strong> اختر العناصر أو ضعها بناءً على ما تراه في الصورة.",
+      odkH: "إذا كان GPS خاطئاً في ODK Collect",
+      odkList: "<li>للعناصر الموجودة، اختر العنصر على الخريطة بمطابقته مع الصورة، وليس حسب قربه من النقطة الزرقاء.</li><li>للعناصر الجديدة، ضع النقطة يدوياً على الخريطة. لا تستخدم \"الموقع الحالي\".</li><li>جهّز الخرائط الأساسية للعمل دون اتصال قبل الخروج، لتكون الصور متاحة دون إشارة.</li><li>إذا كان في النموذج حقل للملاحظات، فاكتب \"GPS غير موثوق، وُضع يدوياً\".</li>",
+      qfH: "إذا كان GPS خاطئاً في QField",
+      qfList: "<li>أوقف \"القفل على الموقع\" وارسم بالنقر على الصورة.</li><li>في الإعدادات › تحديد الموقع، فعّل شرط الدقة لكي يرفض QField الالتقاط عندما تكون الدقة سيئة. هذا يساعد ضد التشويش وليس ضد التزييف.</li><li>حساب متوسط المواقع يقلل الضجيج، لكنه لا يصحح موقعاً مزيفاً.</li><li>جهاز استقبال خارجي متعدد الترددات أكثر صموداً، لكنه ليس محصناً أيضاً.</li>",
+      toolsH: "أدوات اختيارية لنظرة أدق",
+      toolsList: "<li><strong>GPSTest</strong> (مفتوح المصدر، أندرويد) يُظهر الأقمار التي يراها هاتفك وقوة إشارتها.</li><li><strong>GnssLogger</strong> من Google فيه عرض Spoof/Jam. انخفاض قوة الإشارة والكسب معاً يشير إلى التشويش. ارتفاع قوة الإشارة مع انخفاض الكسب يشير إلى التزييف.</li><li>لا تستطيع أي من الأداتين إثبات أن الموقع حقيقي. استخدمهما لتأكيد شكّ، لا لاستبعاده.</li>",
+      safetyH: "السلامة وحماية البيانات",
+      safetyNote: "<strong>كثيراً ما يحدث تشويش GNSS قرب النشاط العسكري والحدود والمواقع الحساسة.</strong> سلامتك أهم من أي بيانات. اتبع قواعد الأمان في منظمتك وتوقف عن العمل إذا شعرت بأن الوضع غير آمن.",
+      safetyList: "<li>لا تستخدم أبداً تطبيقات المواقع الوهمية أو أجهزة إرسال خاصة بك \"لإصلاح\" الموقع.</li><li>يسجّل هاتفك موقعك أنت مع كل إرسال. في نماذج ODK الخاصة بـ Field-TM هذا هو حقل \"warmup\"، مع معرّف الجهاز واسم المستخدم. في مناطق النزاع هذه بيانات شخصية حساسة.</li><li>للمديرين: قيّدوا من يمكنه تنزيل البيانات الخام، واحذفوا أعمدة الموقع والجهاز واسم المستخدم قبل مشاركة البيانات.</li><li>لا تنشروا أين ومتى كان كل راسم خرائط يعمل.</li>",
+      managersH: "لمديري المشاريع",
+      beforeH: "قبل العمل الميداني",
+      beforeList: "<li>اسألوا الشركاء المحليين عما إذا كان قد أُبلغ عن تشويش في المنطقة.</li><li>وفّروا صوراً للعمل دون اتصال (خرائط أساسية) ليتمكن الفريق من العمل دون GPS.</li><li>اشرحوا للفريق فحص العشر ثوانٍ والوضع اليدوي.</li><li>في مشاريع QField، اتفقوا مع الفريق على إعدادات الدقة.</li>",
+      duringH: "أثناء العمل الميداني",
+      duringList: "<li>اطلبوا من راسمي الخرائط الإبلاغ عندما تكون النقطة خاطئة، مع الوقت والمكان التقريبي.</li><li>عدة بلاغات من منطقة واحدة في يوم واحد تعني غالباً وجود تشويش، وليس خطأً من المستخدم.</li><li>لا تدفعوا أحداً إلى التنقل المستمر \"بحثاً عن إشارة\".</li>",
+      afterH: "بعد العمل الميداني",
+      afterList: "<li>شغّلوا الفحص أدناه على ملف التصدير من ODK Central.</li><li>راجعوا الإرسالات المعلَّمة مع راسم الخرائط إن أمكن.</li><li>العناصر المختارة من الخريطة تبقى صحيحة عادةً حتى لو كان موقع الهاتف خاطئاً. أما النقاط الملتقطة عبر GPS فتحتاج إلى نظرة أدق.</li>",
+      checkToolH: "فحص الإرسالات بحثاً عن مواقع مريبة",
+      checkToolP: "نزّل إرسالاتك من ODK Central بصيغة CSV (Submissions › Download › CSV) وافتح الملف هنا. يفحص هذا الأداة الموقع الذي سجّله الهاتف ويعلّم الأنماط المعتادة في التشويش والتزييف. يبدأ بمثال مختلق لترى كيف يعمل.",
+      privacyNote: "يُقرأ ملفك في علامة التبويب هذه فقط. لا يُرفع أي شيء ولا يُحفظ.",
+      dropT: "اختر ملف تصدير CSV من ODK Central", dropS: "أو أفلته هنا",
+      exampleBadge: "بيانات مثال، مختلقة", loadExample: "تحميل المثال من جديد",
+      geoColL: "حقل الموقع", geoColS: "نماذج Field-TM: \"warmup\" هو موقع الهاتف نفسه.",
+      userColL: "عمود راسم الخرائط", timeColL: "عمود الوقت", noneOpt: "(لا شيء)",
+      farKmL: "بعيد عن البقية (كم)", speedL: "سرعة مستحيلة (كم/س)", accL: "دقة سيئة فوق (م)",
+      onlyFlagged: "إظهار الإرسالات المعلَّمة فقط", copyCsv: "نسخ النتائج بصيغة CSV", copied: "نُسخ {n} صفاً إلى الحافظة.", copyFail: "النسخ محظور هنا. حدّد الجدول وانسخه بنفسك.",
+      thRow: "الصف", thId: "الإرسال", thUser: "راسم الخرائط", thTime: "الوقت", thPos: "الموقع", thAcc: "الدقة", thFlags: "النتائج",
+      statTotal: "إرسالاً تم فحصه", statHigh: "تحتاج مراجعة", statMed: "تستحق نظرة", statInfo: "بلا موقع",
+      noFlags: "لا نتائج",
+      loaded: "تم تحميل {n} إرسالاً من {file}.",
+      errNoGeo: "لم يتم العثور على أعمدة الموقع. تسمّيها ملفات CSV من ODK Central مثل \"warmup-Latitude\" و\"warmup-Longitude\".",
+      errParse: "تعذّرت قراءة الملف بصيغة CSV: {msg}",
+      errEmpty: "الملف لا يحتوي على صفوف.",
+      legendH: "ماذا تعني النتائج",
+      legendNote: "النتائج تلميحات لمراجعة بشرية وليست دليلاً. انظر في كل إرسال معلَّم قبل أن تصحح أو تحذف أي شيء.",
+      f_shared: "الموقع نفسه لـ {n} آخرين", f_shared_d: "عدة إرسالات بالإحداثيات نفسها تماماً، غالباً من هواتف مختلفة. قراءات GPS الحقيقية لا تتكرر تقريباً بدقة المتر. هذا نمط معتاد للتزييف أو لموقع مخزّن في الهاتف.",
+      f_far: "على بعد {km} كم من البقية", f_far_d: "بعيد جداً عن المكان الذي سُجلت فيه معظم الإرسالات. إما أن الهاتف تعرّض للتزييف، أو أن النموذج مُلئ في مكان آخر.",
+      f_speed: "قفزة {km} كم بسرعة {kmh} كم/س", f_speed_d: "كان الإرسال السابق للشخص نفسه بعيداً جداً بالنسبة للوقت المنقضي بينهما.",
+      f_acc0: "دقة 0 م تماماً", f_acc0_d: "أجهزة الاستقبال الحقيقية تُبلغ دائماً عن هامش خطأ. القيمة صفر تأتي غالباً من موقع محاكى أو مُدخل.",
+      f_poor: "دقة سيئة ({m} م)", f_poor_d: "معتاد في حالات التشويش أو عند قصر وقت تحديد الموقع جداً.",
+      f_nofix: "لم يُسجَّل موقع", f_nofix_d: "لم يحصل الهاتف على أي موقع. عدة حالات معاً قد تعني وجود تشويش.",
+      footDraft: "مسودة مجتمعية أُعدّت بمساعدة الذكاء الاصطناعي. يرجى مقارنتها بإرشادات منظمتك قبل الاعتماد عليها. النصوص الإسبانية والفرنسية والأوكرانية والعربية ترجمة آلية، وينبغي أن يراجعها متحدثون أصليون قبل الاستخدام الأوسع.",
+      sourcesH: "المصادر"
+    }
+  };
+
+  let lang = "en";
+  const t = (key, vars) => {
+    let s = (T[lang] && T[lang][key]) || T.en[key] || key;
+    if (vars) for (const k in vars) s = s.split("{" + k + "}").join(String(vars[k]));
+    return s;
+  };
+
+  function applyLang(next) {
+    lang = T[next] ? next : "en";
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+    // Only our own translation strings go through innerHTML; file data never does.
+    document.querySelectorAll("[data-i18n-html]").forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+    document.querySelectorAll(".langs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+    try { localStorage.setItem("gnss-guide-lang", lang); } catch (e) { /* storage unavailable */ }
+    refreshSelectsNone();
+    renderLegend();
+    render();
+  }
+
+  // ---------- Geometry helpers ----------
+  const R = 6371.0088;
+  const rad = d => d * Math.PI / 180;
+  function haversineKm(a, b) {
+    const dLat = rad(b.lat - a.lat), dLon = rad(b.lon - a.lon);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+  const median = arr => {
+    const s = arr.slice().sort((x, y) => x - y);
+    const m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  };
+  const num = v => {
+    if (v === undefined || v === null) return NaN;
+    const s = String(v).trim();
+    return s === "" ? NaN : Number(s);
+  };
+
+  // ---------- Core check (pure) ----------
+  // rows: [{row, id, user, time (ms|NaN), lat, lon, acc}]
+  function analyse(rows, opts) {
+    const results = rows.map(r => ({ ...r, flags: [] }));
+    const located = results.filter(r => Number.isFinite(r.lat) && Number.isFinite(r.lon) && !(r.lat === 0 && r.lon === 0));
+
+    results.forEach(r => {
+      if (!located.includes(r)) r.flags.push({ code: "nofix", sev: "info" });
+      else if (r.acc === 0) r.flags.push({ code: "acc0", sev: "med" });
+      else if (Number.isFinite(r.acc) && r.acc > opts.accM) r.flags.push({ code: "poor", sev: "med", m: Math.round(r.acc) });
+    });
+
+    // Identical coordinates (to ~0.1 m) shared by 3 or more submissions.
+    const groups = new Map();
+    located.forEach(r => {
+      const k = r.lat.toFixed(6) + "," + r.lon.toFixed(6);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(r);
+    });
+    groups.forEach(g => {
+      if (g.length < 3) return;
+      const users = new Set(g.map(r => r.user || "?"));
+      g.forEach(r => r.flags.push({ code: "shared", sev: users.size > 1 ? "high" : "med", n: g.length - 1 }));
+    });
+
+    // Far from the robust centre of all located submissions.
+    if (located.length >= 3) {
+      const centre = { lat: median(located.map(r => r.lat)), lon: median(located.map(r => r.lon)) };
+      located.forEach(r => {
+        const d = haversineKm(centre, r);
+        if (d > opts.farKm) r.flags.push({ code: "far", sev: "high", km: Math.round(d) });
+      });
+    }
+
+    // Impossible speed between consecutive submissions by the same mapper.
+    const byUser = new Map();
+    located.forEach(r => {
+      if (!r.user || !Number.isFinite(r.time)) return;
+      if (!byUser.has(r.user)) byUser.set(r.user, []);
+      byUser.get(r.user).push(r);
+    });
+    byUser.forEach(list => {
+      list.sort((a, b) => a.time - b.time);
+      for (let i = 1; i < list.length; i++) {
+        const a = list[i - 1], b = list[i];
+        const km = haversineKm(a, b);
+        if (km < 1) continue;
+        const hours = Math.max((b.time - a.time) / 3600000, 1 / 60);
+        const kmh = km / hours;
+        if (kmh > opts.speedKmh) b.flags.push({ code: "speed", sev: "high", km: Math.round(km), kmh: Math.round(kmh) });
+      }
+    });
+
+    const rank = { high: 0, med: 1, info: 2 };
+    results.forEach(r => r.flags.sort((x, y) => rank[x.sev] - rank[y.sev]));
+    return results;
+  }
+
+  function flagText(f) {
+    if (f.code === "shared") return t("f_shared", { n: f.n });
+    if (f.code === "far") return t("f_far", { km: f.km.toLocaleString(lang) });
+    if (f.code === "speed") return t("f_speed", { km: f.km.toLocaleString(lang), kmh: f.kmh.toLocaleString(lang) });
+    if (f.code === "poor") return t("f_poor", { m: f.m });
+    return t("f_" + f.code);
+  }
+
+  // ---------- Input handling ----------
+  let table = null; // { name, example, headers, records }
+  const $ = id => document.getElementById(id);
+  const geoSel = $("geoCol"), userSel = $("userCol"), timeSel = $("timeCol");
+
+  function geoBases(headers) {
+    return headers
+      .filter(h => /-Latitude$/i.test(h))
+      .map(h => h.replace(/-Latitude$/i, ""))
+      .filter(base => headers.some(h => h.toLowerCase() === (base + "-longitude").toLowerCase()));
+  }
+  function findHeader(headers, name) { return headers.find(h => h.toLowerCase() === name.toLowerCase()); }
+  function pickFirst(headers, names) {
+    for (const n of names) {
+      const hit = headers.find(h => h.toLowerCase() === n.toLowerCase() || h.toLowerCase().endsWith("-" + n.toLowerCase()));
+      if (hit) return hit;
+    }
+    return "";
+  }
+  function fillSelect(sel, options, selected, withNone) {
+    sel.replaceChildren();
+    if (withNone) {
+      const o = document.createElement("option");
+      o.value = ""; o.dataset.none = "1"; o.textContent = t("noneOpt");
+      sel.appendChild(o);
+    }
+    options.forEach(v => {
+      const o = document.createElement("option");
+      o.value = v; o.textContent = v;
+      sel.appendChild(o);
+    });
+    sel.value = selected || "";
+  }
+  function refreshSelectsNone() {
+    [userSel, timeSel].forEach(sel => sel.querySelectorAll("option[data-none]").forEach(o => { o.textContent = t("noneOpt"); }));
+  }
+
+  function setStatus(msg, isErr) {
+    const el = $("status");
+    el.textContent = msg || "";
+    el.classList.toggle("err", !!isErr);
+  }
+
+  function loadTable(name, headers, records, example) {
+    const bases = geoBases(headers);
+    if (!records.length) { setStatus(t("errEmpty"), true); return; }
+    if (!bases.length) { setStatus(t("errNoGeo"), true); return; }
+    table = { name, example, headers, records };
+    const preferred = bases.find(b => /(^|-)warmup$/i.test(b)) || bases[0];
+    fillSelect(geoSel, bases, preferred, false);
+    fillSelect(userSel, headers, pickFirst(headers, ["username", "SubmitterName", "deviceid", "SubmitterID"]), true);
+    fillSelect(timeSel, headers, pickFirst(headers, ["start", "SubmissionDate", "end"]), true);
+    $("sourceName").textContent = name;
+    $("exampleBadge").hidden = !example;
+    setStatus(example ? "" : t("loaded", { n: records.length, file: name }));
+    render();
+  }
+
+  function currentRows() {
+    if (!table) return [];
+    const base = geoSel.value, h = table.headers;
+    const latH = findHeader(h, base + "-Latitude"), lonH = findHeader(h, base + "-Longitude"), accH = findHeader(h, base + "-Accuracy");
+    const idH = pickFirst(h, ["KEY", "instanceID", "meta-instanceID"]);
+    return table.records.map((rec, i) => ({
+      row: i + 2,
+      id: idH ? String(rec[idH] || "") : "",
+      user: userSel.value ? String(rec[userSel.value] || "").trim() : "",
+      timeRaw: timeSel.value ? String(rec[timeSel.value] || "") : "",
+      time: timeSel.value ? Date.parse(rec[timeSel.value]) : NaN,
+      lat: num(rec[latH]), lon: num(rec[lonH]), acc: accH ? num(rec[accH]) : NaN
+    }));
+  }
+
+  function opts() {
+    const v = (id, d) => { const n = Number($(id).value); return Number.isFinite(n) && n > 0 ? n : d; };
+    return { farKm: v("farKm", 50), speedKmh: v("speedKmh", 200), accM: v("accM", 50) };
+  }
+
+  let lastResults = [];
+  function render() {
+    if (!table) return;
+    const results = analyse(currentRows(), opts());
+    lastResults = results;
+    const worst = r => r.flags.length ? r.flags[0].sev : null;
+    const counts = { high: 0, med: 0, info: 0 };
+    results.forEach(r => { const w = worst(r); if (w) counts[w]++; });
+
+    const summary = $("summary");
+    summary.replaceChildren();
+    [["", results.length, "statTotal"], ["high", counts.high, "statHigh"], ["med", counts.med, "statMed"], ["info", counts.info, "statInfo"]].forEach(([cls, n, key]) => {
+      const d = document.createElement("div");
+      d.className = "stat " + cls;
+      const nEl = document.createElement("span"); nEl.className = "n"; nEl.textContent = n.toLocaleString(lang);
+      const tEl = document.createElement("span"); tEl.className = "t"; tEl.textContent = t(key);
+      d.append(nEl, tEl);
+      summary.appendChild(d);
+    });
+
+    const only = $("onlyFlagged").checked;
+    const rank = { high: 0, med: 1, info: 2 };
+    const shown = results
+      .filter(r => !only || r.flags.length)
+      .sort((a, b) => (rank[worst(a)] ?? 3) - (rank[worst(b)] ?? 3) || a.row - b.row);
+
+    const body = $("rows");
+    body.replaceChildren();
+    shown.forEach(r => {
+      const tr = document.createElement("tr");
+      const cell = (text, cls) => { const td = document.createElement("td"); if (cls) td.className = cls; td.textContent = text; tr.appendChild(td); return td; };
+      cell(String(r.row), "mono");
+      cell(r.id ? (r.id.length > 14 ? r.id.slice(0, 14) + "…" : r.id) : "–", "mono").title = r.id;
+      cell(r.user || "–");
+      cell(r.timeRaw ? r.timeRaw.replace("T", " ").slice(0, 16) : "–", "mono");
+      cell(Number.isFinite(r.lat) && Number.isFinite(r.lon) ? r.lat.toFixed(5) + ", " + r.lon.toFixed(5) : "–", "mono");
+      cell(Number.isFinite(r.acc) ? "±" + (Math.round(r.acc * 10) / 10) + " m" : "–", "mono");
+      const td = document.createElement("td");
+      if (r.flags.length) {
+        const wrap = document.createElement("div"); wrap.className = "chips";
+        r.flags.forEach(f => { const c = document.createElement("span"); c.className = "chip " + f.sev; c.textContent = flagText(f); wrap.appendChild(c); });
+        td.appendChild(wrap);
+      } else {
+        td.className = "ok"; td.textContent = t("noFlags");
+      }
+      tr.appendChild(td);
+      body.appendChild(tr);
+    });
+  }
+
+  function renderLegend() {
+    const el = $("legend");
+    el.replaceChildren();
+    [["shared", "high"], ["far", "high"], ["speed", "high"], ["acc0", "med"], ["poor", "med"], ["nofix", "info"]].forEach(([code, sev]) => {
+      const row = document.createElement("div");
+      const chip = document.createElement("span"); chip.className = "chip " + sev;
+      chip.textContent = { shared: t("f_shared", { n: "N" }), far: t("f_far", { km: "N" }), speed: t("f_speed", { km: "N", kmh: "N" }), poor: t("f_poor", { m: "N" }) }[code] || t("f_" + code);
+      const p = document.createElement("span"); p.textContent = t("f_" + code + "_d");
+      row.append(chip, p);
+      el.appendChild(row);
+    });
+  }
+
+  function parseFile(file) {
+    if (!window.Papa) { setStatus(t("errParse", { msg: "CSV library not loaded" }), true); return; }
+    Papa.parse(file, {
+      header: true, skipEmptyLines: true,
+      complete: res => {
+        const headers = (res.meta.fields || []).map(h => String(h));
+        if (res.errors && res.errors.length && !res.data.length) { setStatus(t("errParse", { msg: res.errors[0].message }), true); return; }
+        loadTable(file.name, headers, res.data, false);
+      },
+      error: err => setStatus(t("errParse", { msg: err.message }), true)
+    });
+  }
+
+  // ---------- Example data (invented) ----------
+  function exampleData() {
+    const headers = ["SubmissionDate", "start", "end", "username", "deviceid", "warmup-Latitude", "warmup-Longitude", "warmup-Altitude", "warmup-Accuracy", "KEY"];
+    const base = { lat: -1.2833, lon: 36.8167 };
+    const users = ["amina", "brian", "chloe", "david", "esther"];
+    let seed = 7;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const recs = [];
+    const day = Date.UTC(2026, 9, 14, 6, 30);
+    for (let i = 0; i < 36; i++) {
+      const u = users[i % users.length];
+      const tms = day + i * 11 * 60000 + Math.floor(rnd() * 120000);
+      recs.push({
+        user: u, t: tms,
+        lat: base.lat + (rnd() - 0.5) * 0.03, lon: base.lon + (rnd() - 0.5) * 0.03,
+        acc: 3 + rnd() * 12
+      });
+    }
+    // Spoofed: three phones placed at the same distant point around 09:30.
+    [20, 21, 23].forEach(i => { recs[i].lat = -1.319167; recs[i].lon = 36.927778; recs[i].acc = 4.2; });
+    recs[22].lat = -0.4532; recs[22].lon = 39.6461; recs[22].acc = 3.9;   // far away, a few minutes after a local point
+    recs[8].acc = 180;  // jammed, poor accuracy
+    recs[9].acc = 0;    // suspicious zero accuracy
+    recs[30].lat = NaN; recs[30].lon = NaN; recs[30].acc = NaN; // no fix
+    recs[31].lat = NaN; recs[31].lon = NaN; recs[31].acc = NaN;
+    const iso = ms => new Date(ms).toISOString().replace("Z", "+00:00");
+    const records = recs.map((r, i) => ({
+      "SubmissionDate": iso(r.t + 30 * 60000), "start": iso(r.t), "end": iso(r.t + 4 * 60000),
+      "username": r.user, "deviceid": "collect:" + r.user.slice(0, 3).toUpperCase() + "0" + (i % 5),
+      "warmup-Latitude": Number.isFinite(r.lat) ? r.lat.toFixed(7) : "",
+      "warmup-Longitude": Number.isFinite(r.lon) ? r.lon.toFixed(7) : "",
+      "warmup-Altitude": Number.isFinite(r.lat) ? (1650 + Math.round(rnd() * 40)).toString() : "",
+      "warmup-Accuracy": Number.isFinite(r.acc) ? r.acc.toFixed(1) : "",
+      "KEY": "uuid:example-" + String(i + 1).padStart(3, "0")
+    }));
+    return { headers, records };
+  }
+  function loadExample() {
+    const ex = exampleData();
+    loadTable("example_submissions.csv", ex.headers, ex.records, true);
+  }
+
+  // ---------- Copy results ----------
+  function csvCell(v) {
+    let s = String(v ?? "");
+    if (/^[=+\-@]/.test(s)) s = "'" + s; // keep spreadsheet formulas inert
+    return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+  async function copyResults() {
+    const lines = [["row", "submission", "mapper", "time", "latitude", "longitude", "accuracy_m", "findings"].join(",")];
+    lastResults.filter(r => r.flags.length).forEach(r => {
+      lines.push([r.row, r.id, r.user, r.timeRaw, Number.isFinite(r.lat) ? r.lat : "", Number.isFinite(r.lon) ? r.lon : "", Number.isFinite(r.acc) ? r.acc : "", r.flags.map(flagText).join(" | ")].map(csvCell).join(","));
+    });
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      setStatus(t("copied", { n: lines.length - 1 }));
+    } catch (e) {
+      setStatus(t("copyFail"), true);
+    }
+  }
+
+  // ---------- Wire up ----------
+  document.querySelectorAll(".langs button").forEach(b => b.addEventListener("click", () => applyLang(b.dataset.lang)));
+  [geoSel, userSel, timeSel, $("onlyFlagged")].forEach(el => el.addEventListener("change", render));
+  ["farKm", "speedKmh", "accM"].forEach(id => $(id).addEventListener("input", render));
+  $("file").addEventListener("change", e => { const f = e.target.files && e.target.files[0]; if (f) parseFile(f); e.target.value = ""; });
+  const drop = $("drop");
+  ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => { const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f) parseFile(f); });
+  $("loadExample").addEventListener("click", loadExample);
+  $("copyCsv").addEventListener("click", copyResults);
+
+  let saved = "en";
+  try { saved = localStorage.getItem("gnss-guide-lang") || "en"; } catch (e) { /* storage unavailable */ }
+  loadExample();
+  applyLang(saved);
+})();
+</script>
+
+</body>
+</html>
