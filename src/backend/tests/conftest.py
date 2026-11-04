@@ -85,6 +85,18 @@ def pytest_configure(config):
     faker_factory_logs.propagate = False
 
 
+@pytest.fixture(autouse=True)
+def _auth_disabled_by_default(monkeypatch):
+    """Run every test as the local admin unless it opts in to auth.
+
+    The test stack builds its .env from .env.example, which defaults to
+    AUTH_PROVIDER=bundled. Since DEBUG no longer implies the local admin,
+    pin the provider here; `login_as` and individual tests can still switch
+    to a real provider with monkeypatch.
+    """
+    monkeypatch.setattr(settings, "AUTH_PROVIDER", AuthProvider.DISABLED)
+
+
 @pytest_asyncio.fixture(scope="function")
 async def db():
     """Get a database connection from the pool.
