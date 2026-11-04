@@ -171,6 +171,12 @@
   .legend, #legend { display: grid; gap: 8px; }
   #legend > div { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: 10px; align-items: start; font-size: var(--step--1); }
   #legend .chip { white-space: normal; justify-self: start; }
+  .colwrap { max-height: 30rem; overflow-y: auto; }
+  .colwrap select { padding: 4px 8px; font-size: var(--step--1); width: auto; min-width: 10rem; }
+  .colwrap td.example { color: var(--muted); max-width: 16rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  tr.changed td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+  [dir="rtl"] tr.changed td:first-child { box-shadow: inset -3px 0 0 var(--accent); }
+  #previewBody td, #previewHead th { white-space: nowrap; max-width: 14rem; overflow: hidden; text-overflow: ellipsis; }
   footer { border-top: 1px solid var(--rule); padding-block: 32px 48px; color: var(--muted); font-size: var(--step--1); display: grid; gap: 12px; }
   footer ul { margin: 0; padding-inline-start: 1.2rem; display: grid; gap: 4px; }
   @media (prefers-reduced-motion: no-preference) {
@@ -212,6 +218,7 @@
         <a href="#safety" data-i18n="tocSafety">Safety and data protection</a>
         <a href="#managers" data-i18n="tocManagers">For project managers</a>
         <a href="#check" data-i18n="tocCheck">Check submissions</a>
+        <a href="#share" data-i18n="tocShare">Share data safely</a>
       </nav>
     </div>
   </div>
@@ -352,6 +359,45 @@
         <div id="legend"></div>
         <p class="note" data-i18n="legendNote">Findings are hints for a human review, not proof. Look at each flagged submission before you correct or remove anything.</p>
       </div>
+    </div>
+  </section>
+  <section class="block" id="share">
+    <div class="wrap checker">
+      <div class="prose" style="display:grid;gap:10px">
+        <h2 data-i18n="shareH">Share data safely</h2>
+        <p data-i18n-html="shareP"></p>
+        <p class="note" data-i18n="shareTextNote">Free-text answers can also contain names or phone numbers. Read through them before sharing.</p>
+      </div>
+      <div class="source">
+        <span class="mono" id="shareSource"></span>
+        <button type="button" class="btn ghost" id="shareReset" data-i18n="shareReset">Reset to recommended</button>
+      </div>
+      <div class="tablewrap colwrap">
+        <table>
+          <thead><tr>
+            <th data-i18n="thCol">Column</th>
+            <th data-i18n="thKind">Contains</th>
+            <th data-i18n="thAction">Action</th>
+            <th data-i18n="thExample">Example value</th>
+          </tr></thead>
+          <tbody id="shareCols"></tbody>
+        </table>
+      </div>
+      <p class="status" id="shareSummary" role="status" aria-live="polite"></p>
+      <div class="tablebar">
+        <h3 data-i18n="previewH">Preview of the cleaned file</h3>
+        <span style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn ghost" id="downloadClean" data-i18n="downloadClean" hidden>Download cleaned CSV</button>
+          <button type="button" class="btn" id="copyClean" data-i18n="copyClean">Copy cleaned CSV</button>
+        </span>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead id="previewHead"></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+      <p class="status" data-i18n="pseudoNote">Codes are drawn at random each time and the link to the original values is not kept anywhere, so this page cannot reverse them.</p>
     </div>
   </section>
 </main>
@@ -753,6 +799,95 @@ License: MIT
     }
   };
 
+  // Strings for the "Share data safely" section, merged into T below.
+  const T2 = {
+    en: {
+      tocShare: "Share data safely", shareH: "Share data safely",
+      shareP: "Before you pass an export on, remove what can identify mappers: names, phone numbers, device IDs and where they were standing. The mapped features stay as they are. This works on the file loaded in the check above; recommended settings are already applied.",
+      shareTextNote: "Free-text answers can also contain names or phone numbers. Read through them before sharing.",
+      shareReset: "Reset to recommended", thCol: "Column", thKind: "Contains", thAction: "Action", thExample: "Example value",
+      kind_person: "Identifies a person", kind_mapperpos: "Mapper's own position", kind_time: "Time", kind_id: "Record ID", kind_contact: "May contain phone numbers or e-mails", kind_location: "Mapped location", kind_other: "Other",
+      act_keep: "Keep", act_remove: "Remove", act_pseudo: "Replace with code", act_round: "Round to ~1 km", act_date: "Date only",
+      shareSummary: "{rows} rows. {removed} columns removed, {pseudo} replaced with codes, {coarse} coarsened, {kept} kept.",
+      previewH: "Preview of the cleaned file", copyClean: "Copy cleaned CSV", downloadClean: "Download cleaned CSV",
+      copiedClean: "Copied the cleaned file ({rows} rows) to the clipboard.",
+      pseudoNote: "Codes are drawn at random each time and the link to the original values is not kept anywhere, so this page cannot reverse them.",
+      savedClean: "Saved {file}.", downloadFail: "Downloading is not available here. Use \"Copy cleaned CSV\" instead.",
+      shareNoTable: "Load a CSV export in the check above first.", shareEmpty: "All columns are removed. Keep at least one column."
+    },
+    de: {
+      tocShare: "Daten sicher teilen", shareH: "Daten sicher teilen",
+      shareP: "Bevor du einen Export weitergibst, entferne alles, was Kartierende identifizieren kann: Namen, Telefonnummern, Geräte-IDs und wo sie standen. Die kartierten Objekte bleiben unverändert. Das funktioniert mit der Datei, die oben in der Prüfung geladen ist; empfohlene Einstellungen sind schon gesetzt.",
+      shareTextNote: "Auch Freitext-Antworten können Namen oder Telefonnummern enthalten. Lies sie durch, bevor du teilst.",
+      shareReset: "Empfehlung wiederherstellen", thCol: "Spalte", thKind: "Enthält", thAction: "Aktion", thExample: "Beispielwert",
+      kind_person: "Identifiziert eine Person", kind_mapperpos: "Position der Kartierenden", kind_time: "Zeit", kind_id: "Datensatz-ID", kind_contact: "Enthält evtl. Telefonnummern oder E-Mails", kind_location: "Kartierter Ort", kind_other: "Sonstiges",
+      act_keep: "Behalten", act_remove: "Entfernen", act_pseudo: "Durch Code ersetzen", act_round: "Auf ~1 km runden", act_date: "Nur Datum",
+      shareSummary: "{rows} Zeilen. {removed} Spalten entfernt, {pseudo} durch Codes ersetzt, {coarse} vergröbert, {kept} behalten.",
+      previewH: "Vorschau der bereinigten Datei", copyClean: "Bereinigte CSV kopieren", downloadClean: "Bereinigte CSV herunterladen",
+      copiedClean: "Bereinigte Datei ({rows} Zeilen) in die Zwischenablage kopiert.",
+      pseudoNote: "Die Codes werden jedes Mal zufällig vergeben, und die Zuordnung zu den Originalwerten wird nirgends gespeichert. Diese Seite kann sie also nicht zurückverwandeln.",
+      savedClean: "{file} gespeichert.", downloadFail: "Herunterladen ist hier nicht möglich. Nutze stattdessen „Bereinigte CSV kopieren“.",
+      shareNoTable: "Lade zuerst oben in der Prüfung einen CSV-Export.", shareEmpty: "Alle Spalten sind entfernt. Behalte mindestens eine Spalte."
+    },
+    es: {
+      tocShare: "Compartir datos con seguridad", shareH: "Compartir datos con seguridad",
+      shareP: "Antes de pasar una exportación a otras personas, quita lo que pueda identificar a quienes mapean: nombres, teléfonos, IDs de dispositivo y dónde estaban. Los elementos mapeados no cambian. Funciona con el archivo cargado arriba en la revisión; los ajustes recomendados ya están aplicados.",
+      shareTextNote: "Las respuestas de texto libre también pueden contener nombres o teléfonos. Léelas antes de compartir.",
+      shareReset: "Restablecer lo recomendado", thCol: "Columna", thKind: "Contiene", thAction: "Acción", thExample: "Valor de ejemplo",
+      kind_person: "Identifica a una persona", kind_mapperpos: "Posición de quien mapea", kind_time: "Hora", kind_id: "ID del registro", kind_contact: "Puede contener teléfonos o correos", kind_location: "Ubicación mapeada", kind_other: "Otros",
+      act_keep: "Mantener", act_remove: "Quitar", act_pseudo: "Sustituir por código", act_round: "Redondear a ~1 km", act_date: "Solo fecha",
+      shareSummary: "{rows} filas. {removed} columnas quitadas, {pseudo} sustituidas por códigos, {coarse} simplificadas, {kept} mantenidas.",
+      previewH: "Vista previa del archivo limpio", copyClean: "Copiar CSV limpio", downloadClean: "Descargar CSV limpio",
+      copiedClean: "Archivo limpio ({rows} filas) copiado al portapapeles.",
+      pseudoNote: "Los códigos se asignan al azar cada vez y la relación con los valores originales no se guarda en ningún sitio, así que esta página no puede revertirlos.",
+      savedClean: "{file} guardado.", downloadFail: "Aquí no se puede descargar. Usa \"Copiar CSV limpio\".",
+      shareNoTable: "Primero carga una exportación CSV en la revisión de arriba.", shareEmpty: "Se han quitado todas las columnas. Mantén al menos una."
+    },
+    fr: {
+      tocShare: "Partager les données en sécurité", shareH: "Partager les données en sécurité",
+      shareP: "Avant de transmettre un export, retirez ce qui peut identifier les cartographes : noms, numéros de téléphone, identifiants d'appareil et l'endroit où ils se trouvaient. Les objets cartographiés restent inchangés. Cela fonctionne avec le fichier chargé dans la vérification ci-dessus ; les réglages recommandés sont déjà appliqués.",
+      shareTextNote: "Les réponses en texte libre peuvent aussi contenir des noms ou des numéros de téléphone. Relisez-les avant de partager.",
+      shareReset: "Rétablir les réglages recommandés", thCol: "Colonne", thKind: "Contenu", thAction: "Action", thExample: "Exemple de valeur",
+      kind_person: "Identifie une personne", kind_mapperpos: "Position du cartographe", kind_time: "Heure", kind_id: "Identifiant de l'envoi", kind_contact: "Peut contenir des téléphones ou e-mails", kind_location: "Lieu cartographié", kind_other: "Autre",
+      act_keep: "Garder", act_remove: "Retirer", act_pseudo: "Remplacer par un code", act_round: "Arrondir à ~1 km", act_date: "Date seulement",
+      shareSummary: "{rows} lignes. {removed} colonnes retirées, {pseudo} remplacées par des codes, {coarse} simplifiées, {kept} gardées.",
+      previewH: "Aperçu du fichier nettoyé", copyClean: "Copier le CSV nettoyé", downloadClean: "Télécharger le CSV nettoyé",
+      copiedClean: "Fichier nettoyé ({rows} lignes) copié dans le presse-papiers.",
+      pseudoNote: "Les codes sont tirés au hasard à chaque fois et le lien avec les valeurs d'origine n'est conservé nulle part : cette page ne peut pas les inverser.",
+      savedClean: "{file} enregistré.", downloadFail: "Le téléchargement n'est pas disponible ici. Utilisez « Copier le CSV nettoyé ».",
+      shareNoTable: "Chargez d'abord un export CSV dans la vérification ci-dessus.", shareEmpty: "Toutes les colonnes sont retirées. Gardez-en au moins une."
+    },
+    uk: {
+      tocShare: "Безпечно ділитися даними", shareH: "Безпечно ділитися даними",
+      shareP: "Перш ніж передавати експорт далі, видаліть усе, що може ідентифікувати картографів: імена, номери телефонів, ідентифікатори пристроїв і місця, де вони стояли. Зібрані об'єкти залишаються без змін. Інструмент працює з файлом, завантаженим у перевірці вище; рекомендовані налаштування вже застосовано.",
+      shareTextNote: "Відповіді у вільній формі теж можуть містити імена чи номери телефонів. Перегляньте їх, перш ніж ділитися.",
+      shareReset: "Повернути рекомендовані", thCol: "Стовпець", thKind: "Містить", thAction: "Дія", thExample: "Приклад значення",
+      kind_person: "Ідентифікує людину", kind_mapperpos: "Позиція картографа", kind_time: "Час", kind_id: "Ідентифікатор запису", kind_contact: "Може містити телефони чи e-mail", kind_location: "Зібране місце", kind_other: "Інше",
+      act_keep: "Залишити", act_remove: "Видалити", act_pseudo: "Замінити кодом", act_round: "Округлити до ~1 км", act_date: "Лише дата",
+      shareSummary: "Рядків: {rows}. Видалено стовпців: {removed}, замінено кодами: {pseudo}, огрублено: {coarse}, залишено: {kept}.",
+      previewH: "Попередній перегляд очищеного файлу", copyClean: "Копіювати очищений CSV", downloadClean: "Завантажити очищений CSV",
+      copiedClean: "Очищений файл (рядків: {rows}) скопійовано в буфер обміну.",
+      pseudoNote: "Коди щоразу призначаються випадково, а зв'язок з початковими значеннями ніде не зберігається, тож ця сторінка не може їх відновити.",
+      savedClean: "Збережено {file}.", downloadFail: "Завантаження тут недоступне. Скористайтеся кнопкою «Копіювати очищений CSV».",
+      shareNoTable: "Спершу завантажте CSV-експорт у перевірці вище.", shareEmpty: "Видалено всі стовпці. Залиште принаймні один."
+    },
+    ar: {
+      tocShare: "مشاركة البيانات بأمان", shareH: "مشاركة البيانات بأمان",
+      shareP: "قبل أن تمرّر ملف تصدير إلى غيرك، احذف ما يمكن أن يكشف هوية راسمي الخرائط: الأسماء وأرقام الهواتف ومعرّفات الأجهزة والأماكن التي كانوا فيها. تبقى العناصر المرسومة كما هي. تعمل الأداة على الملف المحمّل في الفحص أعلاه، والإعدادات الموصى بها مطبّقة مسبقاً.",
+      shareTextNote: "قد تحتوي الإجابات النصية الحرة أيضاً على أسماء أو أرقام هواتف. اقرأها قبل المشاركة.",
+      shareReset: "استعادة الإعدادات الموصى بها", thCol: "العمود", thKind: "يحتوي على", thAction: "الإجراء", thExample: "قيمة مثال",
+      kind_person: "يكشف هوية شخص", kind_mapperpos: "موقع راسم الخرائط نفسه", kind_time: "الوقت", kind_id: "معرّف السجل", kind_contact: "قد يحتوي على هواتف أو بريد إلكتروني", kind_location: "الموقع المرسوم", kind_other: "أخرى",
+      act_keep: "إبقاء", act_remove: "حذف", act_pseudo: "استبدال برمز", act_round: "تقريب إلى ~1 كم", act_date: "التاريخ فقط",
+      shareSummary: "{rows} صفاً. حُذف {removed} عموداً، واستُبدل {pseudo} برموز، وقُرّب {coarse}، وبقي {kept}.",
+      previewH: "معاينة الملف المنظَّف", copyClean: "نسخ ملف CSV المنظَّف", downloadClean: "تنزيل ملف CSV المنظَّف",
+      copiedClean: "نُسخ الملف المنظَّف ({rows} صفاً) إلى الحافظة.",
+      pseudoNote: "تُختار الرموز عشوائياً في كل مرة ولا تُحفظ صلتها بالقيم الأصلية في أي مكان، لذلك لا تستطيع هذه الصفحة إرجاعها.",
+      savedClean: "تم حفظ {file}.", downloadFail: "التنزيل غير متاح هنا. استخدم \"نسخ ملف CSV المنظَّف\" بدلاً من ذلك.",
+      shareNoTable: "حمّل أولاً ملف تصدير CSV في الفحص أعلاه.", shareEmpty: "حُذفت كل الأعمدة. أبقِ عموداً واحداً على الأقل."
+    }
+  };
+  for (const l in T2) Object.assign(T[l], T2[l]);
+
   let lang = "en";
   const t = (key, vars) => {
     let s = (T[lang] && T[lang][key]) || T.en[key] || key;
@@ -772,6 +907,7 @@ License: MIT
     refreshSelectsNone();
     renderLegend();
     render();
+    renderShare();
   }
 
   // ---------- Geometry helpers ----------
@@ -915,6 +1051,8 @@ License: MIT
     $("exampleBadge").hidden = !example;
     setStatus(example ? "" : t("loaded", { n: records.length, file: name }));
     render();
+    buildShareCols();
+    renderShare();
   }
 
   function currentRows() {
@@ -1015,7 +1153,9 @@ License: MIT
 
   // ---------- Example data (invented) ----------
   function exampleData() {
-    const headers = ["SubmissionDate", "start", "end", "username", "deviceid", "warmup-Latitude", "warmup-Longitude", "warmup-Altitude", "warmup-Accuracy", "KEY"];
+    const headers = ["SubmissionDate", "start", "end", "username", "deviceid", "phonenumber", "warmup-Latitude", "warmup-Longitude", "warmup-Altitude", "warmup-Accuracy", "building_use", "notes", "KEY"];
+    const uses = ["residential", "school", "clinic", "shop", "residential", "water point"];
+    const notes = { 3: "Gate locked, caretaker 0712 345 678", 14: "Owner asked to be called back: +254 700 123 456", 27: "Roof damaged after storm" };
     const base = { lat: -1.2833, lon: 36.8167 };
     const users = ["amina", "brian", "chloe", "david", "esther"];
     let seed = 7;
@@ -1046,6 +1186,9 @@ License: MIT
       "warmup-Longitude": Number.isFinite(r.lon) ? r.lon.toFixed(7) : "",
       "warmup-Altitude": Number.isFinite(r.lat) ? (1650 + Math.round(rnd() * 40)).toString() : "",
       "warmup-Accuracy": Number.isFinite(r.acc) ? r.acc.toFixed(1) : "",
+      "phonenumber": "",
+      "building_use": uses[i % uses.length],
+      "notes": notes[i] || "",
       "KEY": "uuid:example-" + String(i + 1).padStart(3, "0")
     }));
     return { headers, records };
@@ -1053,6 +1196,188 @@ License: MIT
   function loadExample() {
     const ex = exampleData();
     loadTable("example_submissions.csv", ex.headers, ex.records, true);
+  }
+
+  // ---------- Share data safely ----------
+  const PERSON_PSEUDO = ["username", "submittername", "osm_username", "name", "full_name", "enumerator"];
+  const PERSON_REMOVE = ["deviceid", "submitterid", "phonenumber", "phone", "email", "simserial", "subscriberid"];
+  const TIME = ["start", "end", "today", "submissiondate", "updatedat"];
+  const IDS = ["key", "instanceid", "uuid", "parent_key", "instancename"];
+  const GEO_SUFFIX = /-(Latitude|Longitude|Altitude|Accuracy)$/i;
+  const EMAIL_RE = /[^\s@,;]+@[^\s@,;]+\.[a-z]{2,}/i;
+  const PHONE_RE = /(?:\+|\b0)\d[\d\s().-]{6,}\d/;
+  const ACTIONS = {
+    person: ["pseudo", "remove", "keep"],
+    mapperpos: ["remove", "round", "keep"],
+    mapperpos_extra: ["remove", "keep"],
+    location: ["keep", "round", "remove"],
+    location_extra: ["keep", "remove"],
+    time: ["date", "remove", "keep"],
+    id: ["keep", "pseudo", "remove"],
+    contact: ["remove", "keep"],
+    other: ["keep", "remove", "pseudo"]
+  };
+  let shareCols = []; // [{name, kind, actions, action, example}]
+
+  const lastPart = h => h.split("-").pop().toLowerCase();
+  function classifyColumn(h, values) {
+    const geo = h.match(GEO_SUFFIX);
+    if (geo) {
+      const base = h.replace(GEO_SUFFIX, "");
+      const own = lastPart(base) === "warmup";
+      const latlon = /^(latitude|longitude)$/i.test(geo[1]);
+      return own ? (latlon ? "mapperpos" : "mapperpos_extra") : (latlon ? "location" : "location_extra");
+    }
+    const p = lastPart(h), full = h.toLowerCase();
+    if (PERSON_PSEUDO.includes(p) || PERSON_PSEUDO.includes(full)) return "person";
+    if (PERSON_REMOVE.includes(p) || PERSON_REMOVE.includes(full)) return "person";
+    if (TIME.includes(p) || TIME.includes(full)) return "time";
+    if (IDS.includes(p) || IDS.includes(full)) return "id";
+    const sample = values.filter(v => v && !/^-?\d+(\.\d+)?$/.test(v)).slice(0, 2000);
+    if (sample.some(v => EMAIL_RE.test(v) || PHONE_RE.test(v))) return "contact";
+    return "other";
+  }
+  function defaultAction(name, kind) {
+    const p = lastPart(name);
+    if (kind === "person" && (PERSON_REMOVE.includes(p) || PERSON_REMOVE.includes(name.toLowerCase()))) return "remove";
+    return ACTIONS[kind][0];
+  }
+
+  function buildShareCols() {
+    if (!table) { shareCols = []; return; }
+    shareCols = table.headers.map(name => {
+      const values = table.records.map(r => String(r[name] ?? "").trim());
+      const kind = classifyColumn(name, values);
+      const base = kind.replace("_extra", "");
+      return {
+        name, kind: base, actions: ACTIONS[kind], action: defaultAction(name, kind),
+        example: values.find(v => v) || ""
+      };
+    });
+  }
+
+  function randomCodes(values) {
+    const uniq = [...new Set(values.filter(v => v !== ""))];
+    for (let i = uniq.length - 1; i > 0; i--) {
+      const r = new Uint32Array(1); crypto.getRandomValues(r);
+      const j = r[0] % (i + 1); [uniq[i], uniq[j]] = [uniq[j], uniq[i]];
+    }
+    const width = String(uniq.length).length < 3 ? 3 : String(uniq.length).length;
+    return new Map(uniq.map((v, i) => [v, "P-" + String(i + 1).padStart(width, "0")]));
+  }
+  function dateOnly(v) {
+    if (!v) return v;
+    const m = String(v).match(/^\d{4}-\d{2}-\d{2}/);
+    if (m) return m[0];
+    const d = Date.parse(v);
+    return Number.isFinite(d) ? new Date(d).toISOString().slice(0, 10) : "";
+  }
+  function roundCoord(v) {
+    const n = num(v);
+    return Number.isFinite(n) ? n.toFixed(2) : "";
+  }
+
+  function cleanTable() {
+    const kept = shareCols.filter(c => c.action !== "remove");
+    // One code table across all pseudonymised columns, so the same person
+    // (e.g. in both username and SubmitterName) gets the same code everywhere.
+    const pseudoCols = kept.filter(c => c.action === "pseudo");
+    const codeOf = randomCodes(pseudoCols.flatMap(c => table.records.map(r => String(r[c.name] ?? "").trim())));
+    const rows = table.records.map(rec => kept.map(c => {
+      const v = String(rec[c.name] ?? "").trim();
+      if (c.action === "pseudo") return v ? codeOf.get(v) : "";
+      if (c.action === "date") return dateOnly(v);
+      if (c.action === "round") return roundCoord(v);
+      return v;
+    }));
+    return { fields: kept.map(c => c.name), rows };
+  }
+
+  let lastClean = null;
+  function renderShare() {
+    const body = $("shareCols"), summary = $("shareSummary");
+    body.replaceChildren(); $("previewHead").replaceChildren(); $("previewBody").replaceChildren();
+    if (!table) { summary.textContent = t("shareNoTable"); return; }
+    $("shareSource").textContent = table.name;
+    shareCols.forEach((c, i) => {
+      const tr = document.createElement("tr");
+      if (c.action !== "keep") tr.className = "changed";
+      const name = document.createElement("td"); name.className = "mono"; name.textContent = c.name;
+      const kind = document.createElement("td");
+      const chip = document.createElement("span");
+      chip.className = "chip " + ({ person: "high", mapperpos: "high", contact: "high", time: "med" }[c.kind] || "info");
+      chip.textContent = t("kind_" + c.kind); kind.appendChild(chip);
+      const act = document.createElement("td");
+      const sel = document.createElement("select");
+      sel.id = "share-action-" + i;
+      sel.setAttribute("aria-label", t("thAction") + ": " + c.name);
+      c.actions.forEach(a => { const o = document.createElement("option"); o.value = a; o.textContent = t("act_" + a); sel.appendChild(o); });
+      sel.value = c.action;
+      sel.addEventListener("change", () => { c.action = sel.value; renderShare(); });
+      act.appendChild(sel);
+      const ex = document.createElement("td"); ex.className = "example mono"; ex.textContent = c.example; ex.title = c.example;
+      tr.append(name, kind, act, ex);
+      body.appendChild(tr);
+    });
+
+    const count = a => shareCols.filter(c => c.action === a).length;
+    if (!shareCols.some(c => c.action !== "remove")) { summary.textContent = t("shareEmpty"); lastClean = null; return; }
+    lastClean = cleanTable();
+    summary.textContent = t("shareSummary", {
+      rows: lastClean.rows.length.toLocaleString(lang), removed: count("remove"), pseudo: count("pseudo"),
+      coarse: count("date") + count("round"), kept: count("keep")
+    });
+    const showCols = Math.min(lastClean.fields.length, 8);
+    const hr = document.createElement("tr");
+    lastClean.fields.slice(0, showCols).forEach(f => { const th = document.createElement("th"); th.textContent = f; hr.appendChild(th); });
+    if (lastClean.fields.length > showCols) { const th = document.createElement("th"); th.textContent = "+" + (lastClean.fields.length - showCols); hr.appendChild(th); }
+    $("previewHead").appendChild(hr);
+    lastClean.rows.slice(0, 5).forEach(row => {
+      const tr = document.createElement("tr");
+      row.slice(0, showCols).forEach(v => { const td = document.createElement("td"); td.className = "mono"; td.textContent = v; td.title = v; tr.appendChild(td); });
+      $("previewBody").appendChild(tr);
+    });
+  }
+
+  function cleanCsvText() {
+    return lastClean ? Papa.unparse({ fields: lastClean.fields, data: lastClean.rows }) : "";
+  }
+  async function copyClean() {
+    if (!lastClean) return;
+    try {
+      await navigator.clipboard.writeText(cleanCsvText());
+      $("shareSummary").textContent = t("copiedClean", { rows: lastClean.rows.length });
+    } catch (e) {
+      $("shareSummary").textContent = t("copyFail");
+    }
+  }
+  // In the claude.ai viewer, saves go through the `downloads` capability (the
+  // viewer confirms). Opened directly as the offline file, a plain download works.
+  let downloadsApi = null;
+  const isTopLevel = () => { try { return window.self === window.top; } catch (e) { return false; } };
+  function updateDownloadButton() { $("downloadClean").hidden = !(downloadsApi || isTopLevel()); }
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("downloads").then(api => { downloadsApi = api; updateDownloadButton(); }).catch(() => {});
+  }
+  async function downloadClean() {
+    if (!lastClean) return;
+    const filename = (table.name || "export.csv").replace(/\.csv$/i, "") + "_shareable.csv";
+    const blob = new Blob([cleanCsvText()], { type: "text/csv;charset=utf-8" });
+    if (downloadsApi) {
+      try {
+        await downloadsApi.save({ filename, data: blob });
+        $("shareSummary").textContent = t("savedClean", { file: filename });
+      } catch (e) {
+        if (e && e.code !== "declined") $("shareSummary").textContent = t("downloadFail");
+      }
+      return;
+    }
+    if (!isTopLevel()) { $("shareSummary").textContent = t("downloadFail"); return; }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
   // ---------- Copy results ----------
@@ -1085,6 +1410,10 @@ License: MIT
   drop.addEventListener("drop", e => { const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f) parseFile(f); });
   $("loadExample").addEventListener("click", loadExample);
   $("copyCsv").addEventListener("click", copyResults);
+  $("copyClean").addEventListener("click", copyClean);
+  $("downloadClean").addEventListener("click", downloadClean);
+  $("shareReset").addEventListener("click", () => { buildShareCols(); renderShare(); });
+  updateDownloadButton();
 
   let saved = "en";
   try { saved = localStorage.getItem("gnss-guide-lang") || "en"; } catch (e) { /* storage unavailable */ }
